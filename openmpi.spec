@@ -1,8 +1,8 @@
 %define name 	openmpi
-%define version	1.1.4
+%define version	1.2
 %define release 1
 
-%define major	1
+%define major	1.2
 %define libname %mklibname %{name} %{major}
 
 Summary: 	A powerful implementation of MPI
@@ -11,7 +11,7 @@ Version: 	%{version}
 Release: 	%mkrel %{release}
 License: 	BSD
 Group: 		Development/Other
-Source: 	http://www.open-mpi.org/software/ompi/v1.1/downloads/openmpi-%{version}.tar.bz2
+Source: 	http://www.open-mpi.org/software/ompi/v%{version}/downloads/openmpi-%{version}.tar.bz2
 Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}
@@ -46,13 +46,14 @@ Requires:	%{libname} = %{version}
 Provides:	lib%{name}-devel  = %{version}-%{release}
 Provides:	%{name}-devel = %{version}-%{release}
 Conflicts:	lam-devel, mpich1-devel, mpich2-devel
+Conflicts:	libopenmpi-devel < 1.2
 
 %description -n %{libname}-devel
 OpenMPI is a project combining technologies and resources from
 several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
 order to build the best MPI library available.
 
-This package contains the static libraries and header files needed to
+This package contains the libraries and header files needed to
 compile applications against OpenMPI.
 
 %prep
@@ -61,7 +62,11 @@ compile applications against OpenMPI.
 
 %build
 
-%configure
+# Disable libtoolize because it messes up the generated libtool
+# in OpenMPI 1.2:
+%define __libtoolize /bin/true
+
+%configure 
 %make
 
 %install
@@ -82,40 +87,22 @@ compile applications against OpenMPI.
 
 %files
 %defattr(-, root, root, -)
-%doc README INSTALL LICENSE
+%doc README INSTALL LICENSE NEWS LICENSE AUTHORS examples/
 %{_sysconfdir}/*
 %{_datadir}/openmpi
-%{_bindir}/ompi_info
-%{_bindir}/orted
-%{_bindir}/orterun
-%{_bindir}/opalCC
-%{_bindir}/opalc++
-%{_bindir}/opalcc
-%{_bindir}/ortec++
-%{_bindir}/ortecc
-%{_bindir}/orteCC
-%{_bindir}/mpirun
-%{_bindir}/mpiexec
-%{_bindir}/mpicc
-%{_bindir}/mpiCC
-%{_bindir}/mpic++
-%{_bindir}/mpicxx
-%{_bindir}/mpif77
-%{_bindir}/mpif90
-%{_bindir}/opal_wrapper
+%{_bindir}/*
 %{_mandir}/man1/*
 
 %files -n %{libname} 
 %defattr(-, root, root, -)
 %{_libdir}/*.so.*
+%{_libdir}/%{name}/*.so
 
 %files -n %{libname}-devel
 %defattr(-, root, root, -)
 %{_includedir}/*
 %{_libdir}/*.so
-%{_libdir}/*.a
 %{_libdir}/*.la
-%{_libdir}/%{name}/*
 %{_libdir}/*.mod
-
-
+%{_libdir}/%{name}/*.la
+%{_mandir}/man3/*
