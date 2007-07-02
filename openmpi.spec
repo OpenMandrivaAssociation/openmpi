@@ -1,5 +1,5 @@
 %define name 	openmpi
-%define version	1.2.2
+%define version	1.2.3
 %define release 1
 
 %define major	1.2
@@ -11,7 +11,7 @@ Version: 	%{version}
 Release: 	%mkrel %{release}
 License: 	BSD
 Group: 		Development/Other
-Source: 	http://www.open-mpi.org/software/ompi/v%{version}/downloads/openmpi-%{version}.tar.bz2
+Source: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
 Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}
