@@ -1,6 +1,6 @@
 %define name 	openmpi
 %define version	1.2.3
-%define release 1
+%define release 2
 
 %define major	1.2
 %define libname %mklibname %{name} %{major}
@@ -14,7 +14,7 @@ Group: 		Development/Other
 Source: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
 Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
-Requires:	%{libname} = %{version}
+Requires:	%{libname} = %{version}, %{libname}-devel = %{version}
 BuildRequires:	gcc-gfortran
 Conflicts:	mpich, mpich2, lam
 
