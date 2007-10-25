@@ -1,9 +1,11 @@
-%define name 	openmpi
-%define version	1.2.4
-%define release 1
+%define name	 openmpi
+%define version	 1.2.4
+%define release  2
 
-%define major	1.2
-%define libname %mklibname %{name} %{major}
+%define oldmajor 1
+%define major	 1.2
+%define libname  %mklibname %{name} %{major}
+%define develname %mklibname %{name} -d
 
 Summary: 	A powerful implementation of MPI
 Name:		%{name}
@@ -14,7 +16,7 @@ Group: 		Development/Other
 Source: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
 Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
-Requires:	%{libname} = %{version}, %{libname}-devel = %{version}
+Requires:	%{libname} = %{version}, %{develname} = %{version}
 BuildRequires:	gcc-gfortran
 Conflicts:	mpich, mpich2, lam
 
@@ -30,6 +32,7 @@ OpenMPI jobs.
 Summary:	Shared libraries for OpenMPI
 Group:		Development/Other
 Provides:	lib%{name} = %{version}-%{release}
+Obsoletes:	%mklibname %{name} %{oldmajor}
 
 %description -n %{libname}
 OpenMPI is a project combining technologies and resources from
@@ -39,16 +42,17 @@ order to build the best MPI library available.
 This package contains the shared libraries needed by programs linked against
 OpenMPI.
 
-%package -n %{libname}-devel
+%package -n %{develname}
 Summary:	Development files for OpenMPI
 Group:		Development/Other
 Requires:	%{libname} = %{version}
 Provides:	lib%{name}-devel  = %{version}-%{release}
 Provides:	%{name}-devel = %{version}-%{release}
+Obsoletes:	%mklibname -d %{name} %{oldmajor}
+Obsoletes:	%mklibname -d %{name} %{major}
 Conflicts:	lam-devel, mpich1-devel, mpich2-devel
-Conflicts:	libopenmpi-devel < 1.2
 
-%description -n %{libname}-devel
+%description -n %{develname}
 OpenMPI is a project combining technologies and resources from
 several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
 order to build the best MPI library available.
@@ -81,10 +85,6 @@ compile applications against OpenMPI.
 
 %postun -n %{libname} -p /sbin/ldconfig
 
-%post -n %{libname}-devel -p /sbin/ldconfig
-
-%postun -n %{libname}-devel -p /sbin/ldconfig
-
 %files
 %defattr(-, root, root, -)
 %doc README INSTALL LICENSE NEWS LICENSE AUTHORS examples/
@@ -98,7 +98,7 @@ compile applications against OpenMPI.
 %{_libdir}/*.so.*
 %{_libdir}/%{name}/*.so
 
-%files -n %{libname}-devel
+%files -n %{develname}
 %defattr(-, root, root, -)
 %{_includedir}/*
 %{_libdir}/*.so
