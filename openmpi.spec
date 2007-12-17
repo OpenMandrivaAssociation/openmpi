@@ -15,7 +15,6 @@ License: 	BSD
 Group: 		Development/Other
 Source: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
 Url: 		http://www.open-mpi.org
-BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}, %{develname} = %{version}
 BuildRequires:	gcc-gfortran
 Conflicts:	mpich, mpich2, lam
