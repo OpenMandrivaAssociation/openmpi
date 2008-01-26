@@ -1,6 +1,6 @@
 %define name	 openmpi
 %define version	 1.2.5
-%define release  1
+%define release  2
 
 %define oldmajor 1
 %define major	 1.2
@@ -70,7 +70,7 @@ compile applications against OpenMPI.
 # in OpenMPI 1.2:
 %define __libtoolize /bin/true
 
-%configure 
+%configure2_5x --enable-shared --enable-static
 %make
 
 %install
@@ -105,4 +105,6 @@ compile applications against OpenMPI.
 %{_libdir}/*.la
 %{_libdir}/*.mod
 %{_libdir}/%{name}/*.la
+%{_libdir}/*.a
+%{_libdir}/%{name}/*.a
 %{_mandir}/man3/*
