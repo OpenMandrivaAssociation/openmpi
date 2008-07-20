@@ -61,7 +61,6 @@ This package contains the libraries and header files needed to
 compile applications against OpenMPI.
 
 %prep
-%__rm -rf %{buildroot}
 %setup -q -n %{name}-%{version}
 
 %build
@@ -69,12 +68,13 @@ compile applications against OpenMPI.
 # Disable libtoolize because it messes up the generated libtool
 # in OpenMPI 1.2:
 %define __libtoolize /bin/true
-
+%define _disable_ld_no_undefined 1
 %configure2_5x --enable-shared --enable-static
 %make
 
 %install
-%make install DESTDIR=%{buildroot}
+%__rm -rf %{buildroot}
+%makeinstall_std
 %__rm -rf %{buildroot}%{_libdir}/debug
 %__mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
 
