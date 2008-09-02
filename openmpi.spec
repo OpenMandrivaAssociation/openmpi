@@ -1,5 +1,5 @@
 %define name	 openmpi
-%define version	 1.2.6
+%define version	 1.2.7
 %define release  1
 
 %define oldmajor 1
