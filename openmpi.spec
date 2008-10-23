@@ -1,5 +1,5 @@
 %define name	 openmpi
-%define version	 1.2.7
+%define version	 1.2.8
 %define release  1
 
 %define oldmajor 1
@@ -17,7 +17,7 @@ Source: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{ver
 Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}, %{develname} = %{version}
-BuildRequires:	gcc-gfortran
+BuildRequires:	gcc-gfortran, torque-devel
 Conflicts:	mpich, mpich2, lam
 
 %description
@@ -69,7 +69,7 @@ compile applications against OpenMPI.
 # in OpenMPI 1.2:
 %define __libtoolize /bin/true
 %define _disable_ld_no_undefined 1
-%configure2_5x --enable-shared --enable-static
+%configure2_5x --enable-shared --enable-static --with-threads=posix --with-tm
 %make
 
 %install
