@@ -1,5 +1,5 @@
 %define name	 openmpi
-%define version	 1.2.8
+%define version	 1.3.1
 %define release  1
 
 %define oldmajor 1
@@ -17,7 +17,12 @@ Source: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{ver
 Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}, %{develname} = %{version}
-BuildRequires:	gcc-gfortran, torque-devel
+BuildRequires:	binutils-devel
+BuildRequires:	libibverbs-devel
+BuildRequires:	libnumactl-devel
+BuildRequires:	gcc-gfortran
+BuildRequires:	papi-devel
+BuildRequires:	torque-devel
 Conflicts:	mpich, mpich2, lam
 
 %description
@@ -92,10 +97,34 @@ compile applications against OpenMPI.
 %files
 %defattr(-, root, root, -)
 %doc README INSTALL LICENSE NEWS LICENSE AUTHORS examples/
-%{_sysconfdir}/*
+%config(noreplace) %{_sysconfdir}/*
 %{_datadir}/openmpi
 %{_bindir}/*
 %{_mandir}/man1/*
+# TODO: these files should be placed in a better place (e.g. in %{_datadir}/openmpi (fix Makefiles?))
+%{_datadir}/FILTER.SPEC
+%{_datadir}/GROUPS.SPEC
+%{_datadir}/METRICS.SPEC
+%{_datadir}/vtcc-wrapper-data.txt
+%{_datadir}/vtcxx-wrapper-data.txt
+%{_datadir}/vtf77-wrapper-data.txt
+%{_datadir}/vtf90-wrapper-data.txt
+%dir %{_datadir}/vampirtrace
+%dir %{_datadir}/vampirtrace/doc
+%{_datadir}/vampirtrace/doc/ChangeLog
+%{_datadir}/vampirtrace/doc/LICENSE
+%{_datadir}/vampirtrace/doc/UserManual.html
+%{_datadir}/vampirtrace/doc/UserManual.pdf
+%{_datadir}/vampirtrace/doc/opari/ChangeLog
+%{_datadir}/vampirtrace/doc/opari/LICENSE
+%{_datadir}/vampirtrace/doc/opari/Readme.html
+%{_datadir}/vampirtrace/doc/opari/lacsi01.pdf
+%{_datadir}/vampirtrace/doc/opari/lacsi01.ps.gz
+%{_datadir}/vampirtrace/doc/opari/opari-logo-100.gif
+%{_datadir}/vampirtrace/doc/otf/ChangeLog
+%{_datadir}/vampirtrace/doc/otf/LICENSE
+%{_datadir}/vampirtrace/doc/otf/otftools.pdf
+%{_datadir}/vampirtrace/doc/otf/specification.pdf
 
 %files -n %{libname} 
 %defattr(-, root, root, -)
@@ -112,3 +141,4 @@ compile applications against OpenMPI.
 %{_libdir}/*.a
 %{_libdir}/%{name}/*.a
 %{_mandir}/man3/*
+%{_mandir}/man7/*
