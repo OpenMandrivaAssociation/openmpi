@@ -1,6 +1,6 @@
 %define name	 openmpi
 %define version	 1.3.1
-%define release  3
+%define release  4
 
 %define oldmajor 1
 %define major	 1.2
@@ -18,11 +18,15 @@ Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}, %{develname} = %{version}
 BuildRequires:	binutils-devel
-BuildRequires:	libibverbs-devel
-BuildRequires:	numa-devel >= 2.0.2
+BuildRequires:	bison
+BuildRequires:	flex
 BuildRequires:	gcc-gfortran
+BuildRequires:	libibverbs-devel
+BuildRequires:	libgomp-devel
+BuildRequires:	numa-devel >= 2.0.2
 BuildRequires:	papi-devel
 BuildRequires:	torque-devel
+BuildRequires:	zlib-devel
 Conflicts:	mpich, mpich2, lam
 
 %description
