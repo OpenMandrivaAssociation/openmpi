@@ -1,6 +1,6 @@
 %define name	 openmpi
 %define version	 1.3.1
-%define release  4
+%define release  5
 
 %define oldmajor 1
 %define major	 1.2
@@ -24,7 +24,6 @@ BuildRequires:	gcc-gfortran
 BuildRequires:	libibverbs-devel
 BuildRequires:	libgomp-devel
 BuildRequires:	numa-devel >= 2.0.2
-BuildRequires:	papi-devel
 BuildRequires:	torque-devel
 BuildRequires:	zlib-devel
 Conflicts:	mpich, mpich2, lam
