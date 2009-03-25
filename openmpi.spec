@@ -1,6 +1,6 @@
 %define name	 openmpi
 %define version	 1.3.1
-%define release  2
+%define release  3
 
 %define oldmajor 1
 %define major	 1.2
@@ -19,7 +19,7 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}, %{develname} = %{version}
 BuildRequires:	binutils-devel
 BuildRequires:	libibverbs-devel
-BuildRequires:	libnumactl-devel >= 2.0.2
+BuildRequires:	numa-devel >= 2.0.2
 BuildRequires:	gcc-gfortran
 BuildRequires:	papi-devel
 BuildRequires:	torque-devel
