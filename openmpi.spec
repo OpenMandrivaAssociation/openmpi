@@ -1,6 +1,6 @@
 %define name	 openmpi
-%define version	 1.3.1
-%define release  5
+%define version	 1.3.2
+%define release  1
 
 %define oldmajor 1
 %define major	 1.2
@@ -13,7 +13,8 @@ Version: 	%{version}
 Release: 	%mkrel %{release}
 License: 	BSD
 Group: 		Development/Other
-Source: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
+Source0: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
+Patch0:		format-string.patch
 Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}, %{develname} = %{version}
@@ -70,6 +71,7 @@ compile applications against OpenMPI.
 
 %prep
 %setup -q -n %{name}-%{version}
+%patch0 -p1
 
 %build
 
