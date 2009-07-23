@@ -8,9 +8,9 @@
 %define develname %mklibname %{name} -d
 
 Summary: 	A powerful implementation of MPI
-Name:		%{name}
-Version: 	%{version}
-Release: 	%mkrel %{release}
+Name:		openmpi
+Version: 	1.3.3
+Release: 	%mkrel 2
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
@@ -25,7 +25,7 @@ BuildRequires:	gcc-gfortran
 BuildRequires:	libibverbs-devel
 BuildRequires:	libgomp-devel
 BuildRequires:	numa-devel >= 2.0.2
-BuildRequires:	torque-devel
+BuildRequires:	torque-devel >= 2.3.7
 BuildRequires:	zlib-devel
 Conflicts:	mpich, mpich2, lam
 
@@ -101,7 +101,7 @@ compile applications against OpenMPI.
 
 %files
 %defattr(-, root, root, -)
-%doc README INSTALL LICENSE NEWS LICENSE AUTHORS examples/
+%doc README LICENSE NEWS AUTHORS examples/
 %config(noreplace) %{_sysconfdir}/*
 %{_datadir}/openmpi
 %{_bindir}/*
