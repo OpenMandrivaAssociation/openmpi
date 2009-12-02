@@ -1,7 +1,3 @@
-%define name	 openmpi
-%define version	 1.3.3
-%define release  1
-
 %define oldmajor 1
 %define major	 1.2
 %define libname  %mklibname %{name} %{major}
@@ -9,8 +5,8 @@
 
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
-Version: 	1.3.3
-Release: 	%mkrel 2
+Version: 	1.3.4
+Release: 	%mkrel 1
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
