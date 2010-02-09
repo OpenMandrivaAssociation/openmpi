@@ -120,7 +120,7 @@ compile applications against OpenMPI.
 %{_datadir}/vampirtrace/doc/opari/LICENSE
 %{_datadir}/vampirtrace/doc/opari/Readme.html
 %{_datadir}/vampirtrace/doc/opari/lacsi01.pdf
-%{_datadir}/vampirtrace/doc/opari/lacsi01.ps.gz
+#%{_datadir}/vampirtrace/doc/opari/lacsi01.ps.gz
 %{_datadir}/vampirtrace/doc/opari/opari-logo-100.gif
 %{_datadir}/vampirtrace/doc/otf/ChangeLog
 %{_datadir}/vampirtrace/doc/otf/LICENSE
