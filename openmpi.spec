@@ -1,15 +1,15 @@
 %define oldmajor 1
-%define major	 1.2
+%define major	 0
 %define libname  %mklibname %{name} %{major}
 %define develname %mklibname %{name} -d
 
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
-Version: 	1.4.2
+Version: 	1.4.3
 Release: 	%mkrel 1
 License: 	BSD
 Group: 		Development/Other
-Source0: 	http://www.open-mpi.org/software/ompi/v%{major}/downloads/openmpi-%{version}.tar.bz2
+Source0: 	http://www.open-mpi.org/software/ompi/v1.4/downloads/openmpi-%{version}.tar.bz2
 Patch0:		format_string.patch
 Url: 		http://www.open-mpi.org
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
@@ -37,7 +37,7 @@ OpenMPI jobs.
 Summary:	Shared libraries for OpenMPI
 Group:		Development/Other
 Provides:	lib%{name} = %{version}-%{release}
-Obsoletes:	%mklibname %{name} %{oldmajor}
+Obsoletes:	%{mklibname %name 1.2} < 1.4.3
 
 %description -n %{libname}
 OpenMPI is a project combining technologies and resources from
@@ -54,8 +54,8 @@ Requires:	%{libname} = %{version}
 Provides:	lib%{name}-devel  = %{version}-%{release}
 Provides:	%{name}-devel = %{version}-%{release}
 Obsoletes:	%mklibname -d %{name} %{oldmajor}
-Obsoletes:	%mklibname -d %{name} %{major}
 Conflicts:	lam-devel, mpich1-devel, mpich2-devel
+Obsoletes:	%{mklibname -d %name 1.2} < 1.4.3
 
 %description -n %{develname}
 OpenMPI is a project combining technologies and resources from
@@ -129,7 +129,7 @@ compile applications against OpenMPI.
 
 %files -n %{libname} 
 %defattr(-, root, root, -)
-%{_libdir}/*.so.*
+%{_libdir}/*.so.%{major}*
 %{_libdir}/%{name}/*.so
 
 %files -n %{develname}
