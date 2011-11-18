@@ -5,8 +5,8 @@
 
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
-Version: 	1.4.3
-Release: 	%mkrel 2
+Version: 	1.4.4
+Release: 	%mkrel 1
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v1.4/downloads/openmpi-%{version}.tar.bz2
