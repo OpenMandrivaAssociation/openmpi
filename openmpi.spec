@@ -6,7 +6,7 @@
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
 Version: 	1.4.3
-Release: 	%mkrel 1
+Release: 	%mkrel 2
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v1.4/downloads/openmpi-%{version}.tar.bz2
@@ -30,8 +30,8 @@ OpenMPI is a project combining technologies and resources from
 several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
 order to build the best MPI library available.
 
-This package contains all of the tools necessary to compile, link, and run
-OpenMPI jobs.
+This package contains all of the tools necessary to compile, link, and
+run OpenMPI jobs.
 
 %package -n %{libname}
 Summary:	Shared libraries for OpenMPI
@@ -44,8 +44,8 @@ OpenMPI is a project combining technologies and resources from
 several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
 order to build the best MPI library available.
 
-This package contains the shared libraries needed by programs linked against
-OpenMPI.
+This package contains the shared libraries needed by programs linked
+against OpenMPI.
 
 %package -n %{develname}
 Summary:	Development files for OpenMPI
@@ -65,6 +65,18 @@ order to build the best MPI library available.
 This package contains the libraries and header files needed to
 compile applications against OpenMPI.
 
+%package -n %{name}-doc
+Summary:	Documentation for OpenMPI
+Group:		Development/Other
+
+%description -n %{name}-doc
+OpenMPI is a project combining technologies and resources from
+several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
+order to build the best MPI library available.
+
+This package contains documentation and development man pages 
+for OpenMPI.
+
 %prep
 %setup -q -n %{name}-%{version}
 %patch0 -p0 
@@ -83,6 +95,10 @@ compile applications against OpenMPI.
 %makeinstall_std
 %__rm -rf %{buildroot}%{_libdir}/debug
 %__mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
+
+%multiarch_includes %{buildroot}%{_includedir}/mpif-config.h
+
+%multiarch_includes %{buildroot}%{_includedir}/vampirtrace/OTF_inttypes_unix.h
 
 %clean
 %__rm -rf %{buildroot}
@@ -110,6 +126,27 @@ compile applications against OpenMPI.
 %{_datadir}/vtcxx-wrapper-data.txt
 %{_datadir}/vtf77-wrapper-data.txt
 %{_datadir}/vtf90-wrapper-data.txt
+
+%files -n %{libname} 
+%defattr(-, root, root, -)
+%{_libdir}/*.so.%{major}*
+%{_libdir}/%{name}/*.so
+
+%files -n %{develname}
+%defattr(-, root, root, -)
+%{_includedir}/*
+%{multiarch_includedir}/
+%{_libdir}/*.so
+%{_libdir}/*.la
+%{_libdir}/*.mod
+%{_libdir}/%{name}/*.la
+%{_libdir}/*.a
+%{_libdir}/%{name}/*.a
+
+%files -n %{name}-doc
+%defattr(-, root, root, -)
+%{_mandir}/man3/*
+%{_mandir}/man7/*
 %dir %{_datadir}/vampirtrace
 %dir %{_datadir}/vampirtrace/doc
 %{_datadir}/vampirtrace/doc/ChangeLog
@@ -126,20 +163,3 @@ compile applications against OpenMPI.
 %{_datadir}/vampirtrace/doc/otf/LICENSE
 %{_datadir}/vampirtrace/doc/otf/otftools.pdf
 %{_datadir}/vampirtrace/doc/otf/specification.pdf
-
-%files -n %{libname} 
-%defattr(-, root, root, -)
-%{_libdir}/*.so.%{major}*
-%{_libdir}/%{name}/*.so
-
-%files -n %{develname}
-%defattr(-, root, root, -)
-%{_includedir}/*
-%{_libdir}/*.so
-%{_libdir}/*.la
-%{_libdir}/*.mod
-%{_libdir}/%{name}/*.la
-%{_libdir}/*.a
-%{_libdir}/%{name}/*.a
-%{_mandir}/man3/*
-%{_mandir}/man7/*
