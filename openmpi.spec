@@ -68,6 +68,7 @@ compile applications against OpenMPI.
 %package -n %{name}-doc
 Summary:	Documentation for OpenMPI
 Group:		Development/Other
+BuildArch:	noarch
 
 %description -n %{name}-doc
 OpenMPI is a project combining technologies and resources from
