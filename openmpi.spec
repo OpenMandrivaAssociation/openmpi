@@ -6,7 +6,7 @@
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
 Version: 	1.4.4
-Release: 	%mkrel 1
+Release: 	%mkrel 2
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v1.4/downloads/openmpi-%{version}.tar.bz2
@@ -97,10 +97,6 @@ for OpenMPI.
 %__rm -rf %{buildroot}%{_libdir}/debug
 %__mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
 
-%multiarch_includes %{buildroot}%{_includedir}/mpif-config.h
-
-%multiarch_includes %{buildroot}%{_includedir}/vampirtrace/OTF_inttypes_unix.h
-
 %clean
 %__rm -rf %{buildroot}
 
@@ -136,7 +132,6 @@ for OpenMPI.
 %files -n %{develname}
 %defattr(-, root, root, -)
 %{_includedir}/*
-%{multiarch_includedir}/
 %{_libdir}/*.so
 %{_libdir}/*.la
 %{_libdir}/*.mod
