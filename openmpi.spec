@@ -6,7 +6,7 @@
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
 Version: 	1.4.5
-Release: 	%mkrel 1
+Release: 	%mkrel 2
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v1.4/downloads/openmpi-%{version}.tar.bz2
@@ -88,6 +88,7 @@ for OpenMPI.
 # in OpenMPI 1.2:
 %define __libtoolize /bin/true
 %define _disable_ld_no_undefined 1
+export CFLAGS='-fPIC'
 %configure2_5x --enable-shared --enable-static --with-threads=posix --with-tm
 %make
 
