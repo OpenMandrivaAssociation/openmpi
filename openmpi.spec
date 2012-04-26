@@ -5,14 +5,13 @@
 
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
-Version: 	1.4.5
-Release: 	%mkrel 2
+Version: 	1.5.5
+Release: 	1
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v1.4/downloads/openmpi-%{version}.tar.bz2
 Patch0:		format_string.patch
 Url: 		http://www.open-mpi.org
-BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:	%{libname} = %{version}, %{develname} = %{version}
 BuildRequires:	binutils-devel
 BuildRequires:	bison
@@ -80,7 +79,7 @@ for OpenMPI.
 
 %prep
 %setup -q -n %{name}-%{version}
-%patch0 -p0 
+#%patch0 -p0 
 
 %build
 
@@ -93,24 +92,11 @@ export CFLAGS='-fPIC'
 %make
 
 %install
-%__rm -rf %{buildroot}
 %makeinstall_std
 %__rm -rf %{buildroot}%{_libdir}/debug
 %__mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
 
-%clean
-%__rm -rf %{buildroot}
-
-%if %mdkversion < 200900
-%post -n %{libname} -p /sbin/ldconfig
-%endif
-
-%if %mdkversion < 200900
-%postun -n %{libname} -p /sbin/ldconfig
-%endif
-
 %files
-%defattr(-, root, root, -)
 %doc README LICENSE NEWS AUTHORS examples/
 %config(noreplace) %{_sysconfdir}/*
 %{_datadir}/openmpi
@@ -126,22 +112,17 @@ export CFLAGS='-fPIC'
 %{_datadir}/vtf90-wrapper-data.txt
 
 %files -n %{libname} 
-%defattr(-, root, root, -)
 %{_libdir}/*.so.%{major}*
 %{_libdir}/%{name}/*.so
 
 %files -n %{develname}
-%defattr(-, root, root, -)
 %{_includedir}/*
 %{_libdir}/*.so
-%{_libdir}/*.la
 %{_libdir}/*.mod
-%{_libdir}/%{name}/*.la
 %{_libdir}/*.a
 %{_libdir}/%{name}/*.a
 
 %files -n %{name}-doc
-%defattr(-, root, root, -)
 %{_mandir}/man3/*
 %{_mandir}/man7/*
 %dir %{_datadir}/vampirtrace
