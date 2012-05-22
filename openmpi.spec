@@ -139,9 +139,7 @@ export CFLAGS='-fPIC'
 %{_libdir}/*.so
 %{_libdir}/*.mod
 %{_libdir}/*.a
-%{_libdir}/*.la
 %{_libdir}/%{name}/*.a
-%{_libdir}/%{name}/*.la
 %{_libdir}/pkgconfig/*.pc
 
 %files -n %{name}-doc
