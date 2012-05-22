@@ -1,16 +1,26 @@
 %define oldmajor 1
-%define major	 0
+%define major	 1
 %define libname  %mklibname %{name} %{major}
 %define develname %mklibname %{name} -d
 
+# Although CUDA-based code is in the 1.6 source, it doesn't seem 
+# configurable yet
+%define	cuda	0
+%{?_with_cuda: %global %cuda 1}
+%{?_without_cuda: %global %cuda 0}
+
+%define	rel		1
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
-Version: 	1.5.5
-Release: 	1
+Version: 	1.6
+%if %mdkversion < 201100
+Release: 	%rel
+%else
+Release:	%mkrel %rel
+%endif
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v1.4/downloads/openmpi-%{version}.tar.bz2
-Patch0:		format_string.patch
 Url: 		http://www.open-mpi.org
 Requires:	%{libname} = %{version}, %{develname} = %{version}
 BuildRequires:	binutils-devel
@@ -22,6 +32,10 @@ BuildRequires:	libgomp-devel
 BuildRequires:	numa-devel >= 2.0.2
 BuildRequires:	torque-devel >= 2.3.7
 BuildRequires:	zlib-devel
+%if %cuda
+Requires:		nvidia-cuda-toolkit
+BuildRequires:	nvidia-cuda-toolkit-devel, nvidia-current-devel
+%endif
 Conflicts:	mpich, mpich2, lam
 
 %description
@@ -79,7 +93,6 @@ for OpenMPI.
 
 %prep
 %setup -q -n %{name}-%{version}
-#%patch0 -p0 
 
 %build
 
@@ -94,6 +107,7 @@ export CFLAGS='-fPIC'
 %install
 %makeinstall_std
 %__rm -rf %{buildroot}%{_libdir}/debug
+%__rm -f %{buildroot}%{_datadir}/libtool
 %__mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
 
 %files
@@ -107,12 +121,18 @@ export CFLAGS='-fPIC'
 %{_datadir}/GROUPS.SPEC
 %{_datadir}/METRICS.SPEC
 %{_datadir}/vtcc-wrapper-data.txt
+%{_datadir}/vtCC-wrapper-data.txt
 %{_datadir}/vtcxx-wrapper-data.txt
+%{_datadir}/vtc++-wrapper-data.txt
 %{_datadir}/vtf77-wrapper-data.txt
 %{_datadir}/vtf90-wrapper-data.txt
+%if %cuda
+%{_datadir}/vtnvcc-wrapper-data.txt
+%endif
+%{_datadir}/vtsetup-data.*
 
 %files -n %{libname} 
-%{_libdir}/*.so.%{major}*
+%{_libdir}/*.so.*
 %{_libdir}/%{name}/*.so
 
 %files -n %{develname}
@@ -120,23 +140,14 @@ export CFLAGS='-fPIC'
 %{_libdir}/*.so
 %{_libdir}/*.mod
 %{_libdir}/*.a
+%{_libdir}/*.la
 %{_libdir}/%{name}/*.a
+%{_libdir}/%{name}/*.la
+%{_libdir}/pkgconfig/*.pc
 
 %files -n %{name}-doc
 %{_mandir}/man3/*
 %{_mandir}/man7/*
 %dir %{_datadir}/vampirtrace
 %dir %{_datadir}/vampirtrace/doc
-%{_datadir}/vampirtrace/doc/ChangeLog
-%{_datadir}/vampirtrace/doc/LICENSE
-%{_datadir}/vampirtrace/doc/UserManual.html
-%{_datadir}/vampirtrace/doc/UserManual.pdf
-%{_datadir}/vampirtrace/doc/opari/ChangeLog
-%{_datadir}/vampirtrace/doc/opari/LICENSE
-%{_datadir}/vampirtrace/doc/opari/Readme.html
-%{_datadir}/vampirtrace/doc/opari/lacsi01.pdf
-%{_datadir}/vampirtrace/doc/opari/opari-logo-100.gif
-%{_datadir}/vampirtrace/doc/otf/ChangeLog
-%{_datadir}/vampirtrace/doc/otf/LICENSE
-%{_datadir}/vampirtrace/doc/otf/otftools.pdf
-%{_datadir}/vampirtrace/doc/otf/specification.pdf
+%{_datadir}/vampirtrace/doc/*
