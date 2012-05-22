@@ -14,9 +14,9 @@ Summary: 	A powerful implementation of MPI
 Name:		openmpi
 Version: 	1.6
 %if %mdkversion < 201100
-Release: 	%rel
+Release: 	%mkrel %rel
 %else
-Release:	%mkrel %rel
+Release:	%rel
 %endif
 License: 	BSD
 Group: 		Development/Other
@@ -129,7 +129,6 @@ export CFLAGS='-fPIC'
 %if %cuda
 %{_datadir}/vtnvcc-wrapper-data.txt
 %endif
-%{_datadir}/vtsetup-data.*
 
 %files -n %{libname} 
 %{_libdir}/*.so.*
