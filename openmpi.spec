@@ -9,18 +9,14 @@
 %{?_with_cuda: %global %cuda 1}
 %{?_without_cuda: %global %cuda 0}
 
-%define	rel		1
+%define	rel	1
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
-Version: 	1.6
-%if %mdkversion < 201100
-Release: 	%mkrel %rel
-%else
+Version: 	1.6.2
 Release:	%rel
-%endif
 License: 	BSD
 Group: 		Development/Other
-Source0: 	http://www.open-mpi.org/software/ompi/v1.4/downloads/openmpi-%{version}.tar.bz2
+Source0: 	http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-%{version}.tar.bz2
 Url: 		http://www.open-mpi.org
 Requires:	%{libname} = %{version}, %{develname} = %{version}
 BuildRequires:	binutils-devel
@@ -107,6 +103,8 @@ export CFLAGS='-fPIC'
 %install
 %makeinstall_std
 %__rm -rf %{buildroot}%{_libdir}/debug
+rm -f %{buildroot}/%{_datadir}/config.log
+#rm -f %{buildroot}/%{_datadir}/omp.h
 %__rm -f %{buildroot}%{_datadir}/libtool
 %__mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
 
@@ -126,6 +124,7 @@ export CFLAGS='-fPIC'
 %{_datadir}/vtc++-wrapper-data.txt
 %{_datadir}/vtf77-wrapper-data.txt
 %{_datadir}/vtf90-wrapper-data.txt
+%{_datadir}/vtfort-wrapper-data.txt
 %if %cuda
 %{_datadir}/vtnvcc-wrapper-data.txt
 %endif
@@ -138,6 +137,7 @@ export CFLAGS='-fPIC'
 %{_includedir}/*
 %{_libdir}/*.so
 %{_libdir}/*.mod
+%{_datadir}/omp.h
 %{_libdir}/*.a
 %{_libdir}/%{name}/*.a
 %{_libdir}/pkgconfig/*.pc
