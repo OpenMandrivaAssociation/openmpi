@@ -9,14 +9,18 @@
 %{?_with_cuda: %global %cuda 1}
 %{?_without_cuda: %global %cuda 0}
 
-%define	rel	1
+%define	rel		1
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
 Version: 	1.6.2
+%if %mdkversion < 201100
+Release: 	%mkrel %rel
+%else
 Release:	%rel
+%endif
 License: 	BSD
 Group: 		Development/Other
-Source0: 	http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-%{version}.tar.bz2
+Source0: 	http://www.open-mpi.org/software/ompi/v1.6/downloads/%{name}-%{version}.tar.bz2
 Url: 		http://www.open-mpi.org
 Requires:	%{libname} = %{version}, %{develname} = %{version}
 BuildRequires:	binutils-devel
@@ -103,10 +107,10 @@ export CFLAGS='-fPIC'
 %install
 %makeinstall_std
 %__rm -rf %{buildroot}%{_libdir}/debug
-rm -f %{buildroot}/%{_datadir}/config.log
-#rm -f %{buildroot}/%{_datadir}/omp.h
 %__rm -f %{buildroot}%{_datadir}/libtool
 %__mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
+rm -f %{buildroot}/%{_datadir}/vtfort-wrapper-data.txt
+rm -f %{buildroot}/%{_datadir}/config.log
 
 %files
 %doc README LICENSE NEWS AUTHORS examples/
@@ -124,7 +128,6 @@ rm -f %{buildroot}/%{_datadir}/config.log
 %{_datadir}/vtc++-wrapper-data.txt
 %{_datadir}/vtf77-wrapper-data.txt
 %{_datadir}/vtf90-wrapper-data.txt
-%{_datadir}/vtfort-wrapper-data.txt
 %if %cuda
 %{_datadir}/vtnvcc-wrapper-data.txt
 %endif
