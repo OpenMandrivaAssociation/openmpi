@@ -9,15 +9,10 @@
 %{?_with_cuda: %global %cuda 1}
 %{?_without_cuda: %global %cuda 0}
 
-%define	rel		1
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
 Version: 	1.6.2
-%if %mdkversion < 201100
-Release: 	%mkrel %rel
-%else
-Release:	%rel
-%endif
+Release:	3
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v1.6/downloads/%{name}-%{version}.tar.bz2
