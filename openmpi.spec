@@ -1,3 +1,10 @@
+# This package is totally messed up
+
+%if %{_use_internal_dependency_generator}
+%define __noautoreq 'devel\\(libotf\\)'
+%define __noautoprov 'devel\\(libotf\\)'
+%endif
+
 %define oldmajor 1
 %define major	 1
 %define libname  %mklibname %{name} %{major}
@@ -12,7 +19,7 @@
 Summary: 	A powerful implementation of MPI
 Name:		openmpi
 Version: 	1.6.2
-Release:	3
+Release:	4
 License: 	BSD
 Group: 		Development/Other
 Source0: 	http://www.open-mpi.org/software/ompi/v1.6/downloads/%{name}-%{version}.tar.bz2
