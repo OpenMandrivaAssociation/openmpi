@@ -1,44 +1,47 @@
-# This package is totally messed up
+%define mpi_major 1
+%define mpifh_major 2
+%define trace_major 0
+%define openpal_major 6
+%define vt_major 0
+%define libmpi %mklibname mpi %{mpi_major}
+%define libmpicxx %mklibname mpi_cxx %{mpi_major}
+%define libmpifh %mklibname mpi_mpifh %{mpifh_major}
+%define libmpiuse %mklibname mpi_usempi %{mpi_major}
+%define libtrace %mklibname ompitrace %{trace_major}
+%define libopenpal %mklibname open-pal %{openpal_major}
+%define libopenrte %mklibname open-rte %{openpal_major}
+%define libotf %mklibname open-trace-format %{mpi_major}
+%define libotfaux %mklibname otfaux %{trace_major}
+%define libvt %mklibname vt %{vt_major}
+%define libvthyb %mklibname vt-hyb %{vt_major}
+%define libvtmpi %mklibname vt-mpi %{vt_major}
+%define libvtmpiunify %mklibname vt-mpi-unify %{vt_major}
+%define libvtmt %mklibname vt-mt %{vt_major}
+%define devname %mklibname %{name} -d
 
-%if %{_use_internal_dependency_generator}
-%define __noautoreq 'devel\\(libotf.*\\)'
-%define __noautoprov 'devel\\(libotf.*\\)'
-%endif
-
-%define oldmajor 1
-%define major	 1
-%define libname  %mklibname %{name} %{major}
-%define develname %mklibname %{name} -d
-
-# Although CUDA-based code is in the 1.6 source, it doesn't seem 
-# configurable yet
-%define	cuda	0
-%{?_with_cuda: %global %cuda 1}
-%{?_without_cuda: %global %cuda 0}
-
-Summary: 	A powerful implementation of MPI
+Summary:	A powerful implementation of MPI
 Name:		openmpi
-Version: 	1.6.2
-Release:	5
-License: 	BSD
-Group: 		Development/Other
-Source0: 	http://www.open-mpi.org/software/ompi/v1.6/downloads/%{name}-%{version}.tar.bz2
-Url: 		http://www.open-mpi.org
-Requires:	%{libname} = %{version}, %{develname} = %{version}
-BuildRequires:	binutils-devel
+Version:	1.7.3
+Release:	1
+License:	BSD
+Group:		Development/Other
+Url:		http://www.open-mpi.org
+Source0:	http://www.open-mpi.org/software/ompi/v1.6/downloads/%{name}-%{version}.tar.bz2
+Patch0:		openmpi-1.7.3-sfmt.patch
 BuildRequires:	bison
 BuildRequires:	flex
 BuildRequires:	gcc-gfortran
+BuildRequires:	binutils-devel
+BuildRequires:	gomp-devel
 BuildRequires:	libibverbs-devel
-BuildRequires:	libgomp-devel
-BuildRequires:	numa-devel >= 2.0.2
-BuildRequires:	torque-devel >= 2.3.7
-BuildRequires:	zlib-devel
-%if %cuda
-Requires:		nvidia-cuda-toolkit
-BuildRequires:	nvidia-cuda-toolkit-devel, nvidia-current-devel
-%endif
-Conflicts:	mpich, mpich2, lam
+BuildRequires:	numa-devel
+BuildRequires:	torque-devel
+BuildRequires:	pkgconfig(zlib)
+Requires:	%{devname} = %{EVRD}
+Conflicts:	mpich
+Conflicts:	mpich2
+Conflicts:	lam
+Conflicts:	%{_lib}openmpi1 < 1.7.5
 
 %description
 OpenMPI is a project combining technologies and resources from
@@ -48,31 +51,222 @@ order to build the best MPI library available.
 This package contains all of the tools necessary to compile, link, and
 run OpenMPI jobs.
 
-%package -n %{libname}
-Summary:	Shared libraries for OpenMPI
-Group:		Development/Other
-Provides:	lib%{name} = %{version}-%{release}
-Obsoletes:	%{mklibname %name 1.2} < 1.4.3
+%files
+%doc README LICENSE NEWS AUTHORS examples/
+%config(noreplace) %{_sysconfdir}/*
+%{_bindir}/*
+%{_datadir}/%{name}/
+%{_mandir}/man1/*
+%{_libdir}/%{name}/*.so
 
-%description -n %{libname}
-OpenMPI is a project combining technologies and resources from
-several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
-order to build the best MPI library available.
+#----------------------------------------------------------------------------
 
-This package contains the shared libraries needed by programs linked
-against OpenMPI.
+%package -n %{libmpi}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+Obsoletes:	%{_lib}openmpi1 < 1.7.5
 
-%package -n %{develname}
+%description -n %{libmpi}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libmpi}
+%{_libdir}/libmpi.so.%{mpi_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libmpicxx}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libmpicxx}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libmpicxx}
+%{_libdir}/libmpi_cxx.so.%{mpi_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libmpifh}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libmpifh}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libmpifh}
+%{_libdir}/libmpi_mpifh.so.%{mpifh_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libmpiuse}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libmpiuse}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libmpiuse}
+%{_libdir}/libmpi_usempi.so.%{mpi_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libtrace}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libtrace}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libtrace}
+%{_libdir}/libompitrace.so.%{trace_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libopenpal}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libopenpal}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libopenpal}
+%{_libdir}/libopen-pal.so.%{openpal_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libopenrte}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libopenrte}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libopenrte}
+%{_libdir}/libopen-rte.so.%{openpal_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libotf}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libotf}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libotf}
+%{_libdir}/libopen-trace-format.so.%{mpi_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libotfaux}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libotfaux}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libotfaux}
+%{_libdir}/libotfaux.so.%{trace_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libvt}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libvt}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libvt}
+%{_libdir}/libvt.so.%{vt_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libvthyb}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libvthyb}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libvthyb}
+%{_libdir}/libvt-hyb.so.%{vt_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libvtmpi}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libvtmpi}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libvtmpi}
+%{_libdir}/libvt-mpi.so.%{vt_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libvtmpiunify}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libvtmpiunify}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libvtmpiunify}
+%{_libdir}/libvt-mpi-unify.so.%{vt_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{libvtmt}
+Summary:	Shared library for OpenMPI
+Group:		System/Libraries
+Conflicts:	%{_lib}openmpi1 < 1.7.5
+
+%description -n %{libvtmt}
+This package contains shared library needed by programs linked against OpenMPI.
+
+%files -n %{libvtmt}
+%{_libdir}/libvt-mt.so.%{vt_major}*
+
+#----------------------------------------------------------------------------
+
+%package -n %{devname}
 Summary:	Development files for OpenMPI
 Group:		Development/Other
-Requires:	%{libname} = %{version}
-Provides:	lib%{name}-devel  = %{version}-%{release}
-Provides:	%{name}-devel = %{version}-%{release}
-Obsoletes:	%mklibname -d %{name} %{oldmajor}
-Conflicts:	lam-devel, mpich1-devel, mpich2-devel
-Obsoletes:	%{mklibname -d %name 1.2} < 1.4.3
+Requires:	%{libmpi} = %{EVRD}
+Requires:	%{libmpicxx} = %{EVRD}
+Requires:	%{libmpifh} = %{EVRD}
+Requires:	%{libmpiuse} = %{EVRD}
+Requires:	%{libtrace} = %{EVRD}
+Requires:	%{libopenpal} = %{EVRD}
+Requires:	%{libopenrte} = %{EVRD}
+Requires:	%{libotf} = %{EVRD}
+Requires:	%{libotfaux} = %{EVRD}
+Requires:	%{libvt} = %{EVRD}
+Requires:	%{libvthyb} = %{EVRD}
+Requires:	%{libvtmpi} = %{EVRD}
+Requires:	%{libvtmpiunify} = %{EVRD}
+Requires:	%{libvtmt} = %{EVRD}
+Provides:	%{name}-devel = %{EVRD}
+Conflicts:	lam-devel
+Conflicts:	mpich1-devel
+Conflicts:	mpich2-devel
 
-%description -n %{develname}
+%description -n %{devname}
 OpenMPI is a project combining technologies and resources from
 several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
 order to build the best MPI library available.
@@ -80,12 +274,24 @@ order to build the best MPI library available.
 This package contains the libraries and header files needed to
 compile applications against OpenMPI.
 
-%package -n %{name}-doc
+%files -n %{devname}
+%{_includedir}/*
+%{_libdir}/*.so
+%{_libdir}/*.mod
+%{_libdir}/*.a
+%{_libdir}/%{name}/*.a
+%{_libdir}/pkgconfig/*.pc
+%exclude %{_datadir}/vampirtrace/doc/
+%{_datadir}/vampirtrace/
+
+#----------------------------------------------------------------------------
+
+%package doc
 Summary:	Documentation for OpenMPI
 Group:		Development/Other
 BuildArch:	noarch
 
-%description -n %{name}-doc
+%description doc
 OpenMPI is a project combining technologies and resources from
 several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
 order to build the best MPI library available.
@@ -93,63 +299,33 @@ order to build the best MPI library available.
 This package contains documentation and development man pages 
 for OpenMPI.
 
+%files doc
+%{_mandir}/man3/*
+%{_mandir}/man7/*
+%dir %{_datadir}/vampirtrace/doc
+%{_datadir}/vampirtrace/doc/*
+
+#----------------------------------------------------------------------------
+
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q
+%patch0 -p1
 
 %build
-
 # Disable libtoolize because it messes up the generated libtool
 # in OpenMPI 1.2:
 %define __libtoolize /bin/true
 %define _disable_ld_no_undefined 1
 export CFLAGS='-fPIC'
-%configure2_5x --enable-shared --enable-static --with-threads=posix --with-tm
+%configure2_5x \
+	--enable-shared \
+	--enable-static \
+	--with-threads=posix \
+	--with-tm
 %make
 
 %install
 %makeinstall_std
-%__rm -rf %{buildroot}%{_libdir}/debug
-%__rm -f %{buildroot}%{_datadir}/libtool
-%__mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
-rm -f %{buildroot}/%{_datadir}/vtfort-wrapper-data.txt
-rm -f %{buildroot}/%{_datadir}/config.log
 
-%files
-%doc README LICENSE NEWS AUTHORS examples/
-%config(noreplace) %{_sysconfdir}/*
-%{_datadir}/openmpi
-%{_bindir}/*
-%{_mandir}/man1/*
-# TODO: these files should be placed in a better place (e.g. in %{_datadir}/openmpi (fix Makefiles?))
-%{_datadir}/FILTER.SPEC
-%{_datadir}/GROUPS.SPEC
-%{_datadir}/METRICS.SPEC
-%{_datadir}/vtcc-wrapper-data.txt
-%{_datadir}/vtCC-wrapper-data.txt
-%{_datadir}/vtcxx-wrapper-data.txt
-%{_datadir}/vtc++-wrapper-data.txt
-%{_datadir}/vtf77-wrapper-data.txt
-%{_datadir}/vtf90-wrapper-data.txt
-%if %cuda
-%{_datadir}/vtnvcc-wrapper-data.txt
-%endif
+mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
 
-%files -n %{libname} 
-%{_libdir}/*.so.*
-%{_libdir}/%{name}/*.so
-
-%files -n %{develname}
-%{_includedir}/*
-%{_libdir}/*.so
-%{_libdir}/*.mod
-%{_datadir}/omp.h
-%{_libdir}/*.a
-%{_libdir}/%{name}/*.a
-%{_libdir}/pkgconfig/*.pc
-
-%files -n %{name}-doc
-%{_mandir}/man3/*
-%{_mandir}/man7/*
-%dir %{_datadir}/vampirtrace
-%dir %{_datadir}/vampirtrace/doc
-%{_datadir}/vampirtrace/doc/*
