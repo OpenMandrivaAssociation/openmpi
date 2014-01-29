@@ -22,7 +22,7 @@
 Summary:	A powerful implementation of MPI
 Name:		openmpi
 Version:	1.7.3
-Release:	1
+Release:	2
 License:	BSD
 Group:		Development/Other
 Url:		http://www.open-mpi.org
@@ -34,7 +34,9 @@ BuildRequires:	gcc-gfortran
 BuildRequires:	binutils-devel
 BuildRequires:	gomp-devel
 BuildRequires:	libibverbs-devel
+%ifnarch %{arm}
 BuildRequires:	numa-devel
+%endif
 BuildRequires:	torque-devel
 BuildRequires:	pkgconfig(zlib)
 Requires:	%{devname} = %{EVRD}
