@@ -22,7 +22,7 @@
 Summary:	A powerful implementation of MPI
 Name:		openmpi
 Version:	1.7.3
-Release:	2
+Release:	3
 License:	BSD
 Group:		Development/Other
 Url:		http://www.open-mpi.org
@@ -330,4 +330,7 @@ export CFLAGS='-fPIC'
 %makeinstall_std
 
 mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
+
+# To avoid file conflicts with libevent-devel
+rm -rf %{buildroot}%{_includedir}/event2
 
