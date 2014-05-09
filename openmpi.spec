@@ -34,6 +34,7 @@ URL:			http://www.open-mpi.org/
 Source0:		http://www.open-mpi.org/software/ompi/v1.8/downloads/openmpi-%{version}.tar.bz2
 Source1:		openmpi.module.in
 Source2:		macros.openmpi
+Source3:		%{name}.rpmlintrc
 # Patch to use system ltdl for tests
 Patch1:			openmpi-ltdl.patch
 
