@@ -20,7 +20,7 @@
 # suffix in order to keep the names from conflicting.
 #global _cc_name_suffix -gcc
 
-%global macrosdir %(d=%{_rpmconfigdir}/macros.d; [ -d $d ] || d=%{_sysconfdir}/rpm; echo $d)
+%global macrosdir %_sys_macros_dir
 
 Name:			openmpi%{?_cc_name_suffix}
 Version:		1.8.1
@@ -156,7 +156,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/modulefiles/mpi
 sed 's#@LIBDIR@#'%{_libdir}/%{name}'#g;s#@ETCDIR@#'%{_sysconfdir}/%{namearch}'#g;s#@FMODDIR@#'%{_fmoddir}/%{namearch}'#g;s#@INCDIR@#'%{_includedir}/%{namearch}'#g;s#@MANDIR@#'%{_mandir}/%{namearch}'#g;s#@PYSITEARCH@#'%{python_sitearch}/%{name}'#g;s#@COMPILER@#openmpi-'%{_arch}%{?_cc_name_suffix}'#g;s#@SUFFIX@#'%{?_cc_name_suffix}'_openmpi#g' < %SOURCE1 > %{buildroot}%{_sysconfdir}/modulefiles/mpi/%{namearch}
 
 # make the rpm config file
-install -Dpm 644 %{SOURCE2} %{buildroot}/%{macrosdir}/macros.%{namearch}
+install -Dpm 644 %{SOURCE2} %{buildroot}/%{macrosdir}/%{namearch}.macros
 mkdir -p %{buildroot}/%{_fmoddir}/%{namearch}
 mkdir -p %{buildroot}/%{python_sitearch}/openmpi%{?_cc_name_suffix}
 # Remove extraneous wrapper link libraries (bug 814798)
@@ -179,7 +179,7 @@ make check
 %config(noreplace) %{_sysconfdir}/%{namearch}/*
 %{_libdir}/%{name}/bin/mpi[er]*
 %{_libdir}/%{name}/bin/ompi*
-%{_libdir}/%{name}/bin/opari
+#%#{_libdir}/%{name}/bin/opari
 %{_libdir}/%{name}/bin/orte[-dr_]*
 %{_libdir}/%{name}/bin/oshmem_info
 %{_libdir}/%{name}/bin/oshrun
