@@ -1,336 +1,235 @@
-%define mpi_major 1
-%define mpifh_major 2
-%define trace_major 0
-%define openpal_major 6
-%define vt_major 0
-%define libmpi %mklibname mpi %{mpi_major}
-%define libmpicxx %mklibname mpi_cxx %{mpi_major}
-%define libmpifh %mklibname mpi_mpifh %{mpifh_major}
-%define libmpiuse %mklibname mpi_usempi %{mpi_major}
-%define libtrace %mklibname ompitrace %{trace_major}
-%define libopenpal %mklibname open-pal %{openpal_major}
-%define libopenrte %mklibname open-rte %{openpal_major}
-%define libotf %mklibname open-trace-format %{mpi_major}
-%define libotfaux %mklibname otfaux %{trace_major}
-%define libvt %mklibname vt %{vt_major}
-%define libvthyb %mklibname vt-hyb %{vt_major}
-%define libvtmpi %mklibname vt-mpi %{vt_major}
-%define libvtmpiunify %mklibname vt-mpi-unify %{vt_major}
-%define libvtmt %mklibname vt-mt %{vt_major}
-%define devname %mklibname %{name} -d
+%global _fmoddir %{_libdir}/gfortran
+%global _disable_ld_no_undefined 1
+%global serverbuild_hardened 1
+# We only compile with gcc, but other people may want other compilers.
+# Set the compiler here.
+%global opt_cc gcc
+# Optional CFLAGS to use with the specific compiler...gcc doesn't need any,
+# so uncomment and define to use
+#global opt_cflags
+%global opt_cxx g++
+#global opt_cxxflags
+%global opt_f77 gfortran
+#global opt_fflags
+%global opt_fc gfortran
+#global opt_fcflags
 
-Summary:	A powerful implementation of MPI
-Name:		openmpi
-Version:	1.7.3
-Release:	3
-License:	BSD
-Group:		Development/Other
-Url:		http://www.open-mpi.org
-Source0:	http://www.open-mpi.org/software/ompi/v1.6/downloads/%{name}-%{version}.tar.bz2
-Patch0:		openmpi-1.7.3-sfmt.patch
-BuildRequires:	bison
-BuildRequires:	flex
-BuildRequires:	gcc-gfortran
-BuildRequires:	binutils-devel
-BuildRequires:	gomp-devel
-BuildRequires:	libibverbs-devel
-%ifnarch %{arm}
-BuildRequires:	numa-devel
+%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+# Optional name suffix to use...we leave it off when compiling with gcc, but
+# for other compiled versions to install side by side, it will need a
+# suffix in order to keep the names from conflicting.
+#global _cc_name_suffix -gcc
+
+%global macrosdir %(d=%{_rpmconfigdir}/macros.d; [ -d $d ] || d=%{_sysconfdir}/rpm; echo $d)
+
+Name:			openmpi%{?_cc_name_suffix}
+Version:		1.8.1
+Release:		1%{?dist}
+Summary:		Open Message Passing Interface
+
+License:		BSD, MIT and Romio
+URL:			http://www.open-mpi.org/
+
+# We can't use %{name} here because of _cc_name_suffix
+Source0:		http://www.open-mpi.org/software/ompi/v1.8/downloads/openmpi-%{version}.tar.bz2
+Source1:		openmpi.module.in
+Source2:		macros.openmpi
+# Patch to use system ltdl for tests
+Patch1:			openmpi-ltdl.patch
+
+BuildRequires:		gcc-gfortran
+#sparc64 and aarch64 don't have valgrind
+%ifnarch %{sparc} aarch64
+BuildRequires:		valgrind-devel
 %endif
-BuildRequires:	torque-devel
-BuildRequires:	pkgconfig(zlib)
-Requires:	%{devname} = %{EVRD}
-Conflicts:	mpich
-Conflicts:	mpich2
-Conflicts:	lam
-Conflicts:	%{_lib}openmpi1 < 1.7.5
+BuildRequires:		libibverbs-devel >= 1.1.3, opensm-devel > 3.3.0
+BuildRequires:		librdmacm-devel libibcm-devel
+BuildRequires:		pkgconfig(hwloc)
+# So configure can find lstopo
+BuildRequires:		hwloc
+BuildRequires:		java-devel
+BuildRequires:		libevent-devel
+BuildRequires:		papi-devel
+BuildRequires:		python libltdl-devel
+BuildRequires:		torque-devel
+
+Provides:		mpi
+Requires:		environment-modules
+# openmpi currently requires ssh to run
+# https://svn.open-mpi.org/trac/ompi/ticket/4228
+Requires:		openssh-clients
+
+# s390 is unlikely to have the hardware we want, and some of the -devel
+# packages we require aren't available there.
+ExcludeArch: s390 s390x
+
+# Private openmpi libraries
+%global __provides_exclude_from %{_libdir}/openmpi/lib/(lib(mca|ompi|open-(pal|rte|trace)|otf|v)|openmpi/).*.so
+%global __requires_exclude lib(mca|ompi|open-(pal|rte|trace)|otf|vt).*
 
 %description
-OpenMPI is a project combining technologies and resources from
+Open MPI is an open source, freely available implementation of both the 
+MPI-1 and MPI-2 standards, combining technologies and resources from
 several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
-order to build the best MPI library available.
+order to build the best MPI library available.  A completely new MPI-2
+compliant implementation, Open MPI offers advantages for system and
+software vendors, application developers, and computer science
+researchers. For more information, see http://www.open-mpi.org/ .
 
-This package contains all of the tools necessary to compile, link, and
-run OpenMPI jobs.
+%package devel
+Summary:	Development files for openmpi
 
-%files
-%doc README LICENSE NEWS AUTHORS examples/
-%config(noreplace) %{_sysconfdir}/*
-%{_bindir}/*
-%{_datadir}/%{name}/
-%{_mandir}/man1/*
-%{_libdir}/%{name}/*.so
+Requires:	%{name} = %{version}-%{release}, gcc-gfortran
+Provides:	mpi-devel
 
-#----------------------------------------------------------------------------
+%description devel
+Contains development headers and libraries for openmpi.
 
-%package -n %{libmpi}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-Obsoletes:	%{_lib}openmpi1 < 1.7.5
+%package java
+Summary:	Java library
 
-%description -n %{libmpi}
-This package contains shared library needed by programs linked against OpenMPI.
+Requires:	%{name} = %{version}-%{release}
+Requires:	java-headless
 
-%files -n %{libmpi}
-%{_libdir}/libmpi.so.%{mpi_major}*
+%description java
+Java library.
 
-#----------------------------------------------------------------------------
+%package java-devel
+Summary:	Java development files for openmpi
 
-%package -n %{libmpicxx}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
+Requires:	%{name}-java = %{version}-%{release}
+Requires:	java-devel
 
-%description -n %{libmpicxx}
-This package contains shared library needed by programs linked against OpenMPI.
+%description java-devel
+Contains development wrapper for compiling Java with openmpi.
 
-%files -n %{libmpicxx}
-%{_libdir}/libmpi_cxx.so.%{mpi_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libmpifh}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libmpifh}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libmpifh}
-%{_libdir}/libmpi_mpifh.so.%{mpifh_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libmpiuse}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libmpiuse}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libmpiuse}
-%{_libdir}/libmpi_usempi.so.%{mpi_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libtrace}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libtrace}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libtrace}
-%{_libdir}/libompitrace.so.%{trace_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libopenpal}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libopenpal}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libopenpal}
-%{_libdir}/libopen-pal.so.%{openpal_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libopenrte}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libopenrte}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libopenrte}
-%{_libdir}/libopen-rte.so.%{openpal_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libotf}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libotf}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libotf}
-%{_libdir}/libopen-trace-format.so.%{mpi_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libotfaux}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libotfaux}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libotfaux}
-%{_libdir}/libotfaux.so.%{trace_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libvt}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libvt}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libvt}
-%{_libdir}/libvt.so.%{vt_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libvthyb}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libvthyb}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libvthyb}
-%{_libdir}/libvt-hyb.so.%{vt_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libvtmpi}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libvtmpi}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libvtmpi}
-%{_libdir}/libvt-mpi.so.%{vt_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libvtmpiunify}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libvtmpiunify}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libvtmpiunify}
-%{_libdir}/libvt-mpi-unify.so.%{vt_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{libvtmt}
-Summary:	Shared library for OpenMPI
-Group:		System/Libraries
-Conflicts:	%{_lib}openmpi1 < 1.7.5
-
-%description -n %{libvtmt}
-This package contains shared library needed by programs linked against OpenMPI.
-
-%files -n %{libvtmt}
-%{_libdir}/libvt-mt.so.%{vt_major}*
-
-#----------------------------------------------------------------------------
-
-%package -n %{devname}
-Summary:	Development files for OpenMPI
-Group:		Development/Other
-Requires:	%{libmpi} = %{EVRD}
-Requires:	%{libmpicxx} = %{EVRD}
-Requires:	%{libmpifh} = %{EVRD}
-Requires:	%{libmpiuse} = %{EVRD}
-Requires:	%{libtrace} = %{EVRD}
-Requires:	%{libopenpal} = %{EVRD}
-Requires:	%{libopenrte} = %{EVRD}
-Requires:	%{libotf} = %{EVRD}
-Requires:	%{libotfaux} = %{EVRD}
-Requires:	%{libvt} = %{EVRD}
-Requires:	%{libvthyb} = %{EVRD}
-Requires:	%{libvtmpi} = %{EVRD}
-Requires:	%{libvtmpiunify} = %{EVRD}
-Requires:	%{libvtmt} = %{EVRD}
-Provides:	%{name}-devel = %{EVRD}
-Conflicts:	lam-devel
-Conflicts:	mpich1-devel
-Conflicts:	mpich2-devel
-
-%description -n %{devname}
-OpenMPI is a project combining technologies and resources from
-several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
-order to build the best MPI library available.
-
-This package contains the libraries and header files needed to
-compile applications against OpenMPI.
-
-%files -n %{devname}
-%{_includedir}/*
-%{_libdir}/*.so
-%{_libdir}/*.mod
-%{_libdir}/*.a
-%{_libdir}/%{name}/*.a
-%{_libdir}/pkgconfig/*.pc
-%exclude %{_datadir}/vampirtrace/doc/
-%{_datadir}/vampirtrace/
-
-#----------------------------------------------------------------------------
-
-%package doc
-Summary:	Documentation for OpenMPI
-Group:		Development/Other
-BuildArch:	noarch
-
-%description doc
-OpenMPI is a project combining technologies and resources from
-several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI) in
-order to build the best MPI library available.
-
-This package contains documentation and development man pages 
-for OpenMPI.
-
-%files doc
-%{_mandir}/man3/*
-%{_mandir}/man7/*
-%dir %{_datadir}/vampirtrace/doc
-%{_datadir}/vampirtrace/doc/*
-
-#----------------------------------------------------------------------------
+# We set this to for convenience, since this is the unique dir we use for this
+# particular package, version, compiler
+%global namearch openmpi-%{_arch}%{?_cc_name_suffix}
 
 %prep
-%setup -q
-%patch0 -p1
+%setup -q -n openmpi-%{version}
+%patch1 -p1 -b .ltdl
+# Make sure we don't use the local libltdl library
+rm -r opal/libltdl
 
 %build
-# Disable libtoolize because it messes up the generated libtool
-# in OpenMPI 1.2:
-%define __libtoolize /bin/true
-%define _disable_ld_no_undefined 1
-export CFLAGS='-fPIC'
-%configure2_5x \
-	--enable-shared \
-	--enable-static \
-	--with-threads=posix \
-	--with-tm
-%make
+./configure --prefix=%{_libdir}/%{name} \
+	--mandir=%{_mandir}/%{namearch} \
+	--includedir=%{_includedir}/%{namearch} \
+	--sysconfdir=%{_sysconfdir}/%{namearch} \
+	--disable-silent-rules \
+	--enable-mpi-java \
+	--enable-opal-multi-threads \
+	--with-libevent=/usr \
+	--with-verbs=/usr \
+	--with-sge \
+%ifnarch %{sparc} aarch64
+	--with-valgrind \
+	--enable-memchecker \
+%endif
+	--with-hwloc=/usr \
+	--with-libltdl=/usr \
+	CC=%{opt_cc} CXX=%{opt_cxx} \
+	LDFLAGS='%{ldflags}' \
+	CFLAGS="%{?opt_cflags} %{!?opt_cflags:$RPM_OPT_FLAGS}" \
+	CXXFLAGS="%{?opt_cxxflags} %{!?opt_cxxflags:$RPM_OPT_FLAGS}" \
+	FC=%{opt_fc} FCFLAGS="%{?opt_fcflags} %{!?opt_fcflags:$RPM_OPT_FLAGS}" \
+	F77=%{opt_f77} FFLAGS="%{?opt_fflags} %{!?opt_fflags:$RPM_OPT_FLAGS}"
+
+make %{?_smp_mflags} V=1
 
 %install
-%makeinstall_std
+make install DESTDIR=%{buildroot}
+rm -fr %{buildroot}%{_libdir}/%{name}/lib/pkgconfig
+find %{buildroot}%{_libdir}/%{name}/lib -name \*.la | xargs rm
+find %{buildroot}%{_mandir}/%{namearch} -type f | xargs gzip -9
+ln -s mpicc.1.gz %{buildroot}%{_mandir}/%{namearch}/man1/mpiCC.1.gz
+rm -f %{buildroot}%{_mandir}/%{namearch}/man1/mpiCC.1
+rm -f %{buildroot}%{_mandir}/%{namearch}/man1/orteCC.1*
+rm -f %{buildroot}%{_libdir}/%{name}/share/vampirtrace/doc/opari/lacsi01.ps.gz
+mkdir %{buildroot}%{_mandir}/%{namearch}/man{2,4,5,6,8,9,n}
 
-mv %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl %{buildroot}%{_datadir}/openmpi/doc
+# Make the environment-modules file
+mkdir -p %{buildroot}%{_sysconfdir}/modulefiles/mpi
+# Since we're doing our own substitution here, use our own definitions.
+sed 's#@LIBDIR@#'%{_libdir}/%{name}'#g;s#@ETCDIR@#'%{_sysconfdir}/%{namearch}'#g;s#@FMODDIR@#'%{_fmoddir}/%{namearch}'#g;s#@INCDIR@#'%{_includedir}/%{namearch}'#g;s#@MANDIR@#'%{_mandir}/%{namearch}'#g;s#@PYSITEARCH@#'%{python_sitearch}/%{name}'#g;s#@COMPILER@#openmpi-'%{_arch}%{?_cc_name_suffix}'#g;s#@SUFFIX@#'%{?_cc_name_suffix}'_openmpi#g' < %SOURCE1 > %{buildroot}%{_sysconfdir}/modulefiles/mpi/%{namearch}
 
-# To avoid file conflicts with libevent-devel
-rm -rf %{buildroot}%{_includedir}/event2
+# make the rpm config file
+install -Dpm 644 %{SOURCE2} %{buildroot}/%{macrosdir}/macros.%{namearch}
+mkdir -p %{buildroot}/%{_fmoddir}/%{namearch}
+mkdir -p %{buildroot}/%{python_sitearch}/openmpi%{?_cc_name_suffix}
+# Remove extraneous wrapper link libraries (bug 814798)
+sed -i -e s/-ldl// -e s/-lhwloc// \
+  %{buildroot}%{_libdir}/%{name}/share/openmpi/*-wrapper-data.txt
 
+%check
+make check
+
+%files
+%dir %{_libdir}/%{name}
+%dir %{_sysconfdir}/%{namearch}
+%dir %{_libdir}/%{name}/bin
+%dir %{_libdir}/%{name}/lib
+%dir %{_libdir}/%{name}/lib/openmpi
+%dir %{_mandir}/%{namearch}
+%dir %{_mandir}/%{namearch}/man*
+%dir %{_fmoddir}/%{namearch}
+%dir %{python_sitearch}/%{name}
+%config(noreplace) %{_sysconfdir}/%{namearch}/*
+%{_libdir}/%{name}/bin/mpi[er]*
+%{_libdir}/%{name}/bin/ompi*
+%{_libdir}/%{name}/bin/opari
+%{_libdir}/%{name}/bin/orte[-dr_]*
+%{_libdir}/%{name}/bin/oshmem_info
+%{_libdir}/%{name}/bin/oshrun
+%{_libdir}/%{name}/bin/otf*
+%{_libdir}/%{name}/bin/shmemrun
+%{_libdir}/%{name}/lib/*.so.*
+%{_mandir}/%{namearch}/man1/mpi[er]*
+%{_mandir}/%{namearch}/man1/ompi*
+%{_mandir}/%{namearch}/man1/orte[-dr_]*
+%{_mandir}/%{namearch}/man1/oshmem_info*
+%{_mandir}/%{namearch}/man7/ompi*
+%{_mandir}/%{namearch}/man7/orte*
+%{_libdir}/%{name}/lib/openmpi/*
+%{_sysconfdir}/modulefiles/mpi/
+%dir %{_libdir}/%{name}/share
+%dir %{_libdir}/%{name}/share/openmpi
+%{_libdir}/%{name}/share/openmpi/doc
+%{_libdir}/%{name}/share/openmpi/amca-param-sets
+%{_libdir}/%{name}/share/openmpi/help*.txt
+%{_libdir}/%{name}/share/openmpi/mca-btl-openib-device-params.ini
+%{_libdir}/%{name}/share/openmpi/mca-coll-ml.config
+
+%files devel
+%dir %{_includedir}/%{namearch}
+%dir %{_libdir}/%{name}/share/vampirtrace
+%{_libdir}/%{name}/bin/mpi[cCf]*
+%{_libdir}/%{name}/bin/opal_*
+%{_libdir}/%{name}/bin/orte[cCf]*
+%{_libdir}/%{name}/bin/osh[cf]*
+%{_libdir}/%{name}/bin/shmem[cf]*
+%{_libdir}/%{name}/bin/vt*
+%{_includedir}/%{namearch}/*
+%{_libdir}/%{name}/lib/*.so
+%{_libdir}/%{name}/lib/lib*.a
+%{_libdir}/%{name}/lib/mpi.mod
+%{_mandir}/%{namearch}/man1/mpi[cCf]*
+%{_mandir}/%{namearch}/man1/opal_*
+%{_mandir}/%{namearch}/man3/*
+%{_mandir}/%{namearch}/man7/opal*
+%{_libdir}/%{name}/share/openmpi/openmpi-valgrind.supp
+%{_libdir}/%{name}/share/openmpi/*-wrapper-data.txt
+%{_libdir}/%{name}/share/vampirtrace/*
+%{macrosdir}/macros.%{namearch}
+
+%files java
+%{_libdir}/%{name}/lib/mpi.jar
+
+%files java-devel
+%{_libdir}/%{name}/bin/mpijavac
+%{_libdir}/%{name}/bin/mpijavac.pl
+# Currently this only contaings openmpi/javadoc
+%{_libdir}/%{name}/share/doc/
+%{_mandir}/%{namearch}/man1/mpijavac.1*
