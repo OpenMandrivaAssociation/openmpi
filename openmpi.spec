@@ -222,7 +222,7 @@ make check
 %{_libdir}/%{name}/share/openmpi/openmpi-valgrind.supp
 %{_libdir}/%{name}/share/openmpi/*-wrapper-data.txt
 %{_libdir}/%{name}/share/vampirtrace/*
-%{macrosdir}/macros.%{namearch}
+%{macrosdir}/%{namearch}.macros
 
 %files java
 %{_libdir}/%{name}/lib/mpi.jar
