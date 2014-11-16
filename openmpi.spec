@@ -23,7 +23,7 @@
 %global macrosdir %_sys_macros_dir
 
 Name:			openmpi%{?_cc_name_suffix}
-Version:		1.8.1
+Version:		1.8.3
 Release:		1%{?dist}
 Summary:		Open Message Passing Interface
 
@@ -180,13 +180,15 @@ make check
 %config(noreplace) %{_sysconfdir}/%{namearch}/*
 %{_libdir}/%{name}/bin/mpi[er]*
 %{_libdir}/%{name}/bin/ompi*
-#%#{_libdir}/%{name}/bin/opari
+%{_libdir}/%{name}/bin/opari
 %{_libdir}/%{name}/bin/orte[-dr_]*
 %{_libdir}/%{name}/bin/oshmem_info
 %{_libdir}/%{name}/bin/oshrun
 %{_libdir}/%{name}/bin/otf*
 %{_libdir}/%{name}/bin/shmemrun
 %{_libdir}/%{name}/lib/*.so.*
+%{_libdir}/%{name}/lib/*.mod
+%exclude %{_libdir}/%{name}/lib/mpi.mod
 %{_mandir}/%{namearch}/man1/mpi[er]*
 %{_mandir}/%{namearch}/man1/ompi*
 %{_mandir}/%{namearch}/man1/orte[-dr_]*
