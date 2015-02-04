@@ -24,7 +24,7 @@
 
 Name:			openmpi%{?_cc_name_suffix}
 Version:		1.8.3
-Release:		1%{?dist}
+Release:		2
 Summary:		Open Message Passing Interface
 
 License:		BSD, MIT and Romio
@@ -180,7 +180,6 @@ make check
 %config(noreplace) %{_sysconfdir}/%{namearch}/*
 %{_libdir}/%{name}/bin/mpi[er]*
 %{_libdir}/%{name}/bin/ompi*
-%{_libdir}/%{name}/bin/opari
 %{_libdir}/%{name}/bin/orte[-dr_]*
 %{_libdir}/%{name}/bin/oshmem_info
 %{_libdir}/%{name}/bin/oshrun
