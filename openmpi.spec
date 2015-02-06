@@ -24,7 +24,7 @@
 
 Name:			openmpi%{?_cc_name_suffix}
 Version:		1.8.3
-Release:		2
+Release:		3
 Summary:		Open Message Passing Interface
 
 License:		BSD, MIT and Romio
