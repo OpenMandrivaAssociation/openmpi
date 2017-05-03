@@ -24,7 +24,7 @@
 
 Name:			openmpi%{?_cc_name_suffix}
 Version:		1.8.3
-Release:		3
+Release:		4
 Summary:		Open Message Passing Interface
 
 License:		BSD, MIT and Romio
@@ -198,7 +198,6 @@ make check
 %{_sysconfdir}/modulefiles/mpi/
 %dir %{_libdir}/%{name}/share
 %dir %{_libdir}/%{name}/share/openmpi
-%{_libdir}/%{name}/share/openmpi/doc
 %{_libdir}/%{name}/share/openmpi/amca-param-sets
 %{_libdir}/%{name}/share/openmpi/help*.txt
 %{_libdir}/%{name}/share/openmpi/mca-btl-openib-device-params.ini
