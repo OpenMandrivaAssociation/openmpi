@@ -125,7 +125,7 @@ rm -r opal/libltdl
 	--with-libevent=/usr \
 	--with-verbs=/usr \
 	--with-sge \
-%ifnarch %{sparc} aarch64
+%ifnarch %{sparc} aarch64 riscv64
 	--with-valgrind \
 	--enable-memchecker \
 %endif
