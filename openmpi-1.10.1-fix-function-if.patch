@@ -1,0 +1,30 @@
+diff --git a/opal/threads/thread_usage.h b/opal/threads/thread_usage.h
+index 2ccaaf3..a27a7f2 100644
+--- a/opal/threads/thread_usage.h
++++ b/opal/threads/thread_usage.h
+@@ -126,8 +126,8 @@
+ }
+ #endif
+ 
+-#if OPAL_HAVE_ATOMIC_MATH_64
+ #if OMPI_ENABLE_THREAD_MULTIPLE
++#if OPAL_HAVE_ATOMIC_ADD_64
+ static inline int64_t
+ OPAL_THREAD_ADD64(volatile int64_t *addr, int delta)
+ {
+@@ -141,6 +141,7 @@
+ 
+     return ret;
+ }
++#endif
+ #else
+ static inline int64_t
+ OPAL_THREAD_ADD64(volatile int64_t *addr, int delta)
+@@ -150,7 +151,6 @@
+     return ret;
+ }
+ #endif
+-#endif
+ 
+ #if OMPI_ENABLE_THREAD_MULTIPLE
+ static inline size_t
