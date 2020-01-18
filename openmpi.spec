@@ -23,7 +23,7 @@
 
 Summary:        An implementation of the Message Passing Interface
 Name:           openmpi
-Version:        4.0.1
+Version:        4.0.2
 Release:        1
 License:        BSD
 Group:          Development/Other
