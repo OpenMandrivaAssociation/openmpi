@@ -13,6 +13,8 @@
 %define         openrte_major            %{major}
 %define         oshmem_major             %{major}
 
+%global		macrosdir %(d=%{_rpmconfigdir}/macros.d; [ -d $d ] || d=%{_sysconfdir}/rpm; echo $d)
+
 %define         libname                  %mklibname %{name} %{major}
 %define         develname                %mklibname %{name} -d
 %define         staticdevelname          %mklibname %{name} -s -d
@@ -20,16 +22,55 @@
 %define         gccinstalldir   %(LC_ALL=C %__cc --print-search-dirs | %__grep install | %__awk '{print $2}')
 %define         fincludedir     %{_libdir}/%{name}
 
+# We only compile with gcc, but other people may want other compilers.
+# Set the compiler here.
+%global opt_cc gcc
+# Optional CFLAGS to use with the specific compiler...gcc doesn't need any,
+# so uncomment and define to use
+#global opt_cflags
+%global opt_cxx g++
+#global opt_cxxflags
+%global opt_f77 gfortran
+#global opt_fflags
+%global opt_fc gfortran
+#global opt_fcflags
+# We set this to for convenience, since this is the unique dir we use for this
+# particular package, version, compiler
+%global namearch openmpi-%{_arch}%{?_cc_name_suffix}
+
+# Private openmpi libraries
+%global __provides_exclude_from %{_libdir}/openmpi/lib/(lib(mca|ompi|open-(pal|rte|trace))|openmpi/).*.so
+%global __requires_exclude lib(mca|ompi|open-(pal|rte|trace)|vt).*
+
+%ifarch aarch64 ppc64le %{x86_64}
+%bcond_with ucx
+%else
+%bcond_with ucx
+%endif
+
+# ARM 32-bit is not supported by rdma
+# https://bugzilla.redhat.com/show_bug.cgi?id=1780584
+%ifarch %{arm}
+%bcond_with rdma
+%else
+%bcond_without rdma
+%endif
+
 
 Summary:        An implementation of the Message Passing Interface
 Name:           openmpi
-Version:        4.0.1
+Version:        4.0.4
 Release:        1
 License:        BSD
 Group:          Development/Other
 
 URL:            http://www.open-mpi.org
-Source0:        http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-%{version}.tar.bz2
+# We can't use %%{name} here beVcause of _cc_name_suffix
+Source0:	https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-%{version}.tar.bz2
+Source1:        openmpi.module.in
+Source3:        openmpi.pth.py3
+Source4:        macros.openmpi
+
 Patch0:         ompi_autogen_sh.patch
 Patch1:         arm_detection.diff
 Patch2:         openmpi-1.10.1-fix-function-if.patch
@@ -39,12 +80,18 @@ BuildRequires:  perl
 BuildRequires:  bison
 BuildRequires:  flex
 BuildRequires:  gawk
-BuildRequires:  pkgconfig(pkg-config)
+BuildRequires:  valgrind-devel
+BuildRequires:  pkgconfig(libevent)
 BuildRequires:  gcc-gfortran
-%ifarch %ix86 x86_64
+%ifarch %ix86 %{x86_64} aarch64
 BuildRequires:  java-openjdk
-BuildRequires:  quadmath-devel
+BuildRequires:  java-devel
+%endif
+%if %{with rdma}
 BuildRequires:  librdmacm-devel
+%endif
+%if %{with ucx}
+BuildRequires:   ucx-devel
 %endif
 BuildRequires:  gcc-c++
 BuildRequires:  binutils-devel
@@ -124,6 +171,28 @@ Conflicts:      mpich2-devel
 %description -n %{staticdevelname}
 %{summary}.
 
+%package java
+Summary:    Java library
+Requires:   %{name} = %{version}-%{release}
+Requires:   java-headless
+ 
+%description java
+Java library.
+ 
+%package java-devel
+Summary:    Java development files for openmpi
+Requires:   %{name}-java = %{version}-%{release}
+Requires:   java-devel
+%description java-devel
+Contains development wrapper for compiling Java with openmpi.
+
+%package -n python-openmpi
+Summary:    OpenMPI support for Python 3
+Requires:   %{name} = %{version}-%{release}
+Requires:   python(abi) = %{python3_version}
+ 
+%description -n python-openmpi
+OpenMPI support for Python 3.
 
 
 %prep
@@ -131,115 +200,177 @@ Conflicts:      mpich2-devel
 
 
 %build
-export CC=%{_bindir}/gcc
-export CXX=%{_bindir}/g++
-%configure --enable-shared \
-	--enable-mpi1-compatibility \
-	--enable-static \
-	--disable-wrapper-rpath \
-	--disable-wrapper-runpath \
+./configure --prefix=%{_libdir}/%{name} \
+	--mandir=%{_mandir}/%{namearch} \
+	--includedir=%{_includedir}/%{namearch} \
+	--sysconfdir=%{_sysconfdir}/%{namearch} \
+	--disable-silent-rules \
+	--enable-builtin-atomics \
 	--enable-mpi-cxx \
-%ifnarch armv5tl
-        --enable-mpi-thread-multiple \
-%endif
-        --with-tm \
-	--with-hwloc=%{_prefix}
-
+	--enable-mpi-java \
+	--enable-static \
+	--enable-mpi1-compatibility \
+	--with-sge \
+	--with-valgrind \
+	--enable-memchecker \
+	--with-hwloc=/usr \
+	--with-libevent=external \
+	--with-pmix=external \
+	CC=%{opt_cc} CXX=%{opt_cxx} \
+	LDFLAGS='%{__global_ldflags}' \
+	CFLAGS="%{?opt_cflags} %{!?opt_cflags:$RPM_OPT_FLAGS}" \
+	CXXFLAGS="%{?opt_cxxflags} %{!?opt_cxxflags:$RPM_OPT_FLAGS}" \
+	FC=%{opt_fc} FCFLAGS="%{?opt_fcflags} %{!?opt_fcflags:$RPM_OPT_FLAGS}"
 
 %make_build
 
-
 %install
 %make_install
+find %{buildroot}%{_libdir}/%{name}/lib -name \*.la | xargs rm
+find %{buildroot}%{_mandir}/%{namearch} -type f | xargs gzip -9
+ln -s mpicc.1.gz %{buildroot}%{_mandir}/%{namearch}/man1/mpiCC.1.gz
+# Remove dangling symlink
+rm %{buildroot}%{_mandir}/%{namearch}/man1/mpiCC.1
+mkdir %{buildroot}%{_mandir}/%{namearch}/man{2,4,5,6,8,9,n}
 
-%__rm -rf %{buildroot}%{_sysconfdir}/openmpi-totalview.tcl
-%__rm -rf %{buildroot}%{_datadir}/libtool
-%__rm -f %{buildroot}%{_datadir}/config.log
-%__rm -f %{buildroot}%{_datadir}/omp.h
+# Make the environment-modules file
+mkdir -p %{buildroot}%{_datadir}/modulefiles/mpi
+# Since we're doing our own substitution here, use our own definitions.
+sed 's#@LIBDIR@#%{_libdir}/%{name}#;
+     s#@ETCDIR@#%{_sysconfdir}/%{namearch}#;
+     s#@FMODDIR@#%{_fmoddir}/%{name}#;
+     s#@INCDIR@#%{_includedir}/%{namearch}#;
+     s#@MANDIR@#%{_mandir}/%{namearch}#;
+     /@PY2SITEARCH@/d;
+     s#@PY3SITEARCH@#%{python3_sitearch}/%{name}#;
+     s#@COMPILER@#openmpi-%{_arch}%{?_cc_name_suffix}#;
+     s#@SUFFIX@#%{?_cc_name_suffix}_openmpi#' \
+     <%{SOURCE1} \
+     >%{buildroot}%{_datadir}/modulefiles/mpi/%{namearch}
 
+# make the rpm config file
+install -Dpm 644 %{SOURCE4} %{buildroot}/%{macrosdir}/macros.%{namearch}
 
-%__install -D -m 644 %{buildroot}%{_libdir}/mpi.mod %{buildroot}%{fincludedir}/mpi.mod
-%__install -D -m 644 %{buildroot}%{_libdir}/mpi_ext.mod %{buildroot}%{fincludedir}/mpi_ext.mod
-%__install -D -m 644 %{buildroot}%{_libdir}/mpi_f08.mod %{buildroot}%{fincludedir}/mpi_f08.mod
-%__install -D -m 644 %{buildroot}%{_libdir}/mpi_f08_ext.mod %{buildroot}%{fincludedir}/mpi_f08_ext.mod
-%__install -D -m 644 %{buildroot}%{_libdir}/mpi_f08_interfaces.mod %{buildroot}%{fincludedir}/mpi_f08_interfaces.mod
-%__install -D -m 644 %{buildroot}%{_libdir}/mpi_f08_interfaces_callbacks.mod %{buildroot}%{fincludedir}/mpi_f08_interfaces_callbacks.mod
-#__install -D -m 644 %%{buildroot}%%{_libdir}/mpi_f08_sizeof.mod %%{buildroot}%%{fincludedir}/mpi_f08_sizeof.mod
-%__install -D -m 644 %{buildroot}%{_libdir}/mpi_f08_types.mod %{buildroot}%{fincludedir}/mpi_f08_types.mod
-%__install -D -m 644 %{buildroot}%{_libdir}/pmpi_f08_interfaces.mod %{buildroot}%{fincludedir}/pmpi_f08_interfaces.mod
-%__rm %{buildroot}%{_libdir}/*.mod
-pushd %{buildroot}%{_libdir}
-%__ln_s %{fincludedir}/*.mod  .
-popd
+# Link the fortran module to proper location
+mkdir -p %{buildroot}%{_fmoddir}/%{name}
+for mod in %{buildroot}%{_libdir}/%{name}/lib/*.mod
+do
+  modname=$(basename $mod)
+  ln -s ../../../%{name}/lib/${modname} %{buildroot}/%{_fmoddir}/%{name}/
+done
 
-find %{buildroot}%{_libdir} -name *.la -delete
+# Link the pkgconfig files into the main namespace as well
+mkdir -p %{buildroot}%{_libdir}/pkgconfig
+cd %{buildroot}%{_libdir}/pkgconfig
+ln -s ../%{name}/lib/pkgconfig/*.pc .
+cd -
 
+# Remove extraneous wrapper link libraries (bug 814798)
+sed -i -e s/-ldl// -e s/-lhwloc// \
+  %{buildroot}%{_libdir}/%{name}/share/openmpi/*-wrapper-data.txt
 
+mkdir -p %{buildroot}/%{python3_sitearch}/%{name}
+install -pDm0644 %{SOURCE3} %{buildroot}/%{python3_sitearch}/openmpi.pth
 
 %files
-%doc README LICENSE NEWS AUTHORS
-%config(noreplace) %{_sysconfdir}/*
-%{_bindir}/mpirun
-%{_bindir}/mpiexec
-%{_bindir}/orted
-%{_bindir}/orte-*
-%{_bindir}/orterun
-#{_bindir}/prun
-%{_bindir}/ompi-*
-#{_bindir}/osh*
-#{_bindir}/shmem*
-%{_datadir}/%{name}/*.txt
-%{_datadir}/%{name}/amca*
-%{_datadir}/%{name}/*.supp
-%{_datadir}/%{name}/mca*
-%{_datadir}/pmix/*.txt
-%{_datadir}/pmix/pmix-valgrind.supp
-%{_mandir}/man1/mpirun*
-%{_mandir}/man1/mpiexec*
-%{_mandir}/man1/orte*
-#{_mandir}/man1/osh*
-#{_mandir}/man1/prun*
-#{_mandir}/man1/shmem*
-%{_mandir}/man1/ompi-*
-%{_mandir}/man7/*
-
+%license LICENSE
+%dir %{_libdir}/%{name}
+%dir %{_sysconfdir}/%{namearch}
+%dir %{_libdir}/%{name}/bin
+%dir %{_libdir}/%{name}/lib
+%dir %{_libdir}/%{name}/lib/openmpi
+%dir %{_mandir}/%{namearch}
+%dir %{_mandir}/%{namearch}/man*
+%config(noreplace) %{_sysconfdir}/%{namearch}/*
+%{_libdir}/%{name}/bin/mpi[er]*
+%{_libdir}/%{name}/bin/ompi*
+%{_libdir}/%{name}/bin/orte[-dr_]*
+%if %{with ucx}
+%{_libdir}/%{name}/bin/oshmem_info
+%{_libdir}/%{name}/bin/oshrun
+%{_libdir}/%{name}/bin/shmemrun
+%endif
+%{_libdir}/%{name}/share/pmix/
+%{_mandir}/%{namearch}/man1/mpi[er]*
+%{_mandir}/%{namearch}/man1/ompi*
+%{_mandir}/%{namearch}/man1/orte[-dr_]*
+%if %{with ucx}
+%{_mandir}/%{namearch}/man1/oshmem_info*
+%{_mandir}/%{namearch}/man1/oshrun*
+%{_mandir}/%{namearch}/man1/shmemrun*
+%endif
+%{_mandir}/%{namearch}/man7/ompi_*
+%{_mandir}/%{namearch}/man7/opal_*
+%{_mandir}/%{namearch}/man7/orte*
+%{_libdir}/%{name}/lib/openmpi/*
+%{_datadir}/modulefiles/mpi/
+%dir %{_libdir}/%{name}/share
+%dir %{_libdir}/%{name}/share/openmpi
+%{_libdir}/%{name}/share/openmpi/amca-param-sets
+%{_libdir}/%{name}/share/openmpi/help*.txt
+%if %{with rdma}
+%{_libdir}/%{name}/share/openmpi/mca-btl-openib-device-params.ini
+%endif
 
 #may be splitted at some point
 %files -n %{libname} 
-%{_libdir}/libmpi.so.%{major}{,.*}
-%{_libdir}/libmpi_cxx.so.%{cxx_major}{,.*}
-%{_libdir}/libmpi_usempif08.so.%{usempif08_major}{,.*}
-%{_libdir}/libmpi_usempi_ignore*.so.%{usempi_ignore_major}{,.*}
-%{_libdir}/libmpi_mpifh*.so.%{mpifh_major}{,.*}
-%{_libdir}/libompitrace*.so.%{ompitrace_major}{,.*}
-%{_libdir}/libopen-pal*.so.%{openpal_major}{,.*}
-%{_libdir}/libopen-rte*.so.%{openrte_major}{,.*}
-
+%{_libdir}/%{name}/lib/libmpi.so.%{major}{,.*}
+%{_libdir}/%{name}/lib/libmpi_cxx.so.%{cxx_major}{,.*}
+%{_libdir}/%{name}/lib/libmpi_usempif08.so.%{usempif08_major}{,.*}
+%{_libdir}/%{name}/lib/libmpi_usempi_ignore*.so.%{usempi_ignore_major}{,.*}
+%{_libdir}/%{name}/lib/libmpi_mpifh*.so.%{mpifh_major}{,.*}
+%{_libdir}/%{name}/lib/libompitrace*.so.%{ompitrace_major}{,.*}
+%{_libdir}/%{name}/lib/libopen-pal*.so.%{openpal_major}{,.*}
+%{_libdir}/%{name}/lib/libopen-rte*.so.%{openrte_major}{,.*}
+%ifarch %ix86 %{x86_64} aarch64
+%{_libdir}/%{name}/lib/libmpi_java.so.%{major}*
+%endif
 
 %files -n %{develname}
-%doc examples/
-%{_bindir}/mpif*
-%{_bindir}/mpic*
-%{_bindir}/mpiC*
-%{_bindir}/ortec*
-%{_bindir}/opal*
-%{_bindir}/ompi_*
-%{_includedir}/*
-%{_libdir}/*.so
-%{_libdir}/%{name}/*.so
-%{_libdir}/*.mod
-%{fincludedir}/*.mod
+%dir %{_includedir}/%{namearch}
+#{_libdir}/%{name}/bin/aggregate_profile.pl
+#{_libdir}/%{name}/bin/profile2mat.pl
+%{_libdir}/%{name}/bin/mpi[cCf]*
+%{_libdir}/%{name}/bin/opal_*
+%{_libdir}/%{name}/bin/orte[cCf]*
+%if %{with ucx}
+%{_libdir}/%{name}/bin/osh[cCf]*
+%endif
+%if %{with ucx}
+%{_libdir}/%{name}/bin/shmem[cCf]*
+%endif
+%{_includedir}/%{namearch}/*
+%{_fmoddir}/%{name}/
+%{_libdir}/%{name}/lib/*.so
+%{_libdir}/%{name}/lib/*.mod
+%{_libdir}/%{name}/lib/pkgconfig/
 %{_libdir}/pkgconfig/*.pc
-%{_datadir}/%{name}/mpi*
-%{_mandir}/man1/mpif*
-%{_mandir}/man1/mpic*
-%{_mandir}/man1/mpiC*
-%{_mandir}/man1/ompi_*
-%{_mandir}/man1/opal_wrapper*
-%{_mandir}/man3/*
-
-
+%{_mandir}/%{namearch}/man1/mpi[cCf]*
+%if %{with ucx}
+%{_mandir}/%{namearch}/man1/osh[cCf]*
+%{_mandir}/%{namearch}/man1/shmem[cCf]*
+%endif
+%{_mandir}/%{namearch}/man1/opal_*
+%{_mandir}/%{namearch}/man3/*
+%{_libdir}/%{name}/share/openmpi/openmpi-valgrind.supp
+%{_libdir}/%{name}/share/openmpi/*-wrapper-data.txt
+%{macrosdir}/macros.%{namearch}
 
 %files -n %{staticdevelname}
-%{_libdir}/*.a
-%{_libdir}/%{name}/*.a
+%{_libdir}/%{name}/lib/*.a
+%{_libdir}/%{name}/lib/%{name}/*.a
+
+%files java
+%{_libdir}/%{name}/lib/mpi.jar
+
+%files java-devel
+%{_libdir}/%{name}/bin/mpijavac
+%{_libdir}/%{name}/bin/mpijavac.pl
+# Currently this only contaings openmpi/javadoc
+%{_libdir}/%{name}/share/doc/
+%{_mandir}/%{namearch}/man1/mpijavac.1.*
+
+%files -n python-openmpi
+%dir %{python3_sitearch}/%{name}
+%{python3_sitearch}/openmpi.pth
+
