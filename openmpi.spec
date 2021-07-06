@@ -59,7 +59,7 @@
 
 Summary:        An implementation of the Message Passing Interface
 Name:           openmpi
-Version:        4.0.5
+Version:        4.0.6
 Release:        1
 License:        BSD
 Group:          Development/Other
