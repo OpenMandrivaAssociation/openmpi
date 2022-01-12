@@ -59,14 +59,14 @@
 
 Summary:        An implementation of the Message Passing Interface
 Name:           openmpi
-Version:        4.0.6
+Version:        4.1.2
 Release:        1
 License:        BSD
 Group:          Development/Other
 
 URL:            http://www.open-mpi.org
 # We can't use %%{name} here beVcause of _cc_name_suffix
-Source0:	https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-%{version}.tar.bz2
+Source0:	https://www.open-mpi.org/software/ompi/v4.1/downloads/openmpi-%{version}.tar.bz2
 Source1:        openmpi.module.in
 Source3:        openmpi.pth.py3
 Source4:        macros.openmpi
@@ -88,16 +88,16 @@ BuildRequires:  java-openjdk
 BuildRequires:  java-devel
 %endif
 %if %{with rdma}
-BuildRequires:  librdmacm-devel
+BuildRequires:  pkgconfig(librdmacm)
 %endif
 %if %{with ucx}
 BuildRequires:   ucx-devel
 %endif
 BuildRequires:  gcc-c++
 BuildRequires:  binutils-devel
-BuildRequires:  libibverbs-devel
+BuildRequires:  pkgconfig(libibverbs)
 BuildRequires:  libgomp-devel
-BuildRequires:  torque-devel >= 2.3.7
+#BuildRequires:  torque-devel >= 2.3.7
 BuildRequires:  pkgconfig(zlib)
 BuildRequires:  pkgconfig(hwloc)
 BuildRequires:  hwloc
@@ -217,10 +217,8 @@ OpenMPI support for Python 3.
 	--with-libevent=external \
 	--with-pmix=external \
 	CC=%{opt_cc} CXX=%{opt_cxx} \
-	LDFLAGS='%{__global_ldflags}' \
-	CFLAGS="%{?opt_cflags} %{!?opt_cflags:$RPM_OPT_FLAGS}" \
-	CXXFLAGS="%{?opt_cxxflags} %{!?opt_cxxflags:$RPM_OPT_FLAGS}" \
-	FC=%{opt_fc} FCFLAGS="%{?opt_fcflags} %{!?opt_fcflags:$RPM_OPT_FLAGS}"
+	CFLAGS="%{optflags} -fno-strict-aliasing" \
+	CXXFLAGS="%{optflags} -fno-strict-aliasing"
 
 %make_build
 
