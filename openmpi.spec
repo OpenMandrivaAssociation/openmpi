@@ -60,7 +60,7 @@
 Summary:        An implementation of the Message Passing Interface
 Name:           openmpi
 Version:        4.1.2
-Release:        1
+Release:        2
 License:        BSD
 Group:          Development/Other
 
