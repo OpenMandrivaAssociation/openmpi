@@ -64,7 +64,7 @@ Release:        2
 License:        BSD
 Group:          Development/Other
 
-URL:            http://www.open-mpi.org
+URL:            https://www.open-mpi.org
 # We can't use %%{name} here beVcause of _cc_name_suffix
 Source0:	https://www.open-mpi.org/software/ompi/v4.1/downloads/openmpi-%{version}.tar.bz2
 Source1:        openmpi.module.in
