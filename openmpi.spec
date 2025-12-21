@@ -76,6 +76,10 @@ Patch1:         arm_detection.diff
 Patch2:         openmpi-1.10.1-fix-function-if.patch
 Patch11:        openmpi-3.1.0-addconditional-scmpset-atomic.patch
 
+BuildRequires:	automake
+BuildRequires:	libtool-base
+BuildRequires:	slibtool
+BuildRequires:	make
 BuildRequires:  perl
 BuildRequires:  bison
 BuildRequires:  flex
