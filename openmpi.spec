@@ -22,13 +22,9 @@
 %define         gccinstalldir   %(LC_ALL=C %__cc --print-search-dirs | %__grep install | %__awk '{print $2}')
 %define         fincludedir     %{_libdir}/%{name}
 
-# We only compile with gcc, but other people may want other compilers.
-# Set the compiler here.
-%global opt_cc gcc
-# Optional CFLAGS to use with the specific compiler...gcc doesn't need any,
-# so uncomment and define to use
-#global opt_cflags
-%global opt_cxx g++
+# clang is the distro default; gcc -flto cannot create executables (lld).
+%global opt_cc clang
+%global opt_cxx clang++
 #global opt_cxxflags
 %global opt_f77 gfortran
 #global opt_fflags
