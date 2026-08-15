@@ -217,8 +217,11 @@ OpenMPI support for Python 3.
 	--with-libevent=external \
 	--with-pmix=external \
 	CC=%{opt_cc} CXX=%{opt_cxx} \
-	CFLAGS="%{optflags} -fno-strict-aliasing" \
-	CXXFLAGS="%{optflags} -fno-strict-aliasing"
+	FC=gfortran F77=gfortran \
+	CFLAGS="%{optflags} -fno-strict-aliasing -fno-lto" \
+	CXXFLAGS="%{optflags} -fno-strict-aliasing -fno-lto" \
+	FCFLAGS="%{optflags} -fno-lto" \
+	FFLAGS="%{optflags} -fno-lto"
 
 %make_build
 
