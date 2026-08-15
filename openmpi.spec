@@ -201,16 +201,15 @@ OpenMPI support for Python 3.
 
 %build
 # gcc -flto cannot create executables (lld). clang C + gfortran LTO objects
-# are not link-compatible. Appending -fno-lto to *FLAGS is not enough:
-# rpm still exports LDFLAGS with a trailing -flto, so the Fortran configure
-# test re-enables LTO at link and cannot run the resulting binary.
+# are not link-compatible. rpm's %{build_ldflags} also injects C-only flags
+# (-Werror=format-security, -D_FORTIFY_SOURCE, ...) which make Open MPI's
+# AC_RUN_IFELSE Fortran check fail ("Could not run a simple Fortran program").
 nolto_cflags="$(echo %{optflags} | sed 's/-flto//g') -fno-lto"
-nolto_ldflags="$(echo %{build_ldflags} | sed 's/-flto//g') -fno-lto"
 export CFLAGS="$nolto_cflags -fno-strict-aliasing"
 export CXXFLAGS="$nolto_cflags -fno-strict-aliasing"
-export FCFLAGS="$nolto_cflags"
-export FFLAGS="$nolto_cflags"
-export LDFLAGS="$nolto_ldflags"
+export FCFLAGS="-Os -g3 -fstack-protector-all -fno-lto"
+export FFLAGS="$FCFLAGS"
+export LDFLAGS="-Wl,-O2 -fno-lto"
 
 ./configure --prefix=%{_libdir}/%{name} \
 	--mandir=%{_mandir}/%{namearch} \
@@ -234,7 +233,8 @@ export LDFLAGS="$nolto_ldflags"
 	CXXFLAGS="$CXXFLAGS" \
 	FCFLAGS="$FCFLAGS" \
 	FFLAGS="$FFLAGS" \
-	LDFLAGS="$LDFLAGS"
+	LDFLAGS="$LDFLAGS" \
+	|| { echo '===== config.log (tail) ====='; tail -n 80 config.log; exit 1; }
 
 %make_build
 
