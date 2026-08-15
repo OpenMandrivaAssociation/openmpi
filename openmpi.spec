@@ -82,7 +82,6 @@ BuildRequires:  flex
 BuildRequires:  gawk
 BuildRequires:  valgrind-devel
 BuildRequires:  pkgconfig(libevent)
-BuildRequires:  gcc-gfortran
 %ifarch %ix86 %{x86_64} aarch64
 BuildRequires:  java-openjdk
 BuildRequires:  java-devel
@@ -143,7 +142,6 @@ Group:          Development/Other
 Requires:       %{libname} = %{version}-%{release}
 #was Requires
 Recommends:       %{name} = %{version}-%{release}
-Requires:       gcc-gfortran 
 Requires:       gcc-c++
 Provides:       lib%{name}-devel  = %{version}-%{release}
 Provides:       %{name}-devel = %{version}-%{release}
@@ -160,7 +158,6 @@ Conflicts:      mpich2-devel
 Summary:        Static Development files for OpenMPI
 Group:          Development/Other
 Requires:       %{libname} = %{version}-%{release}
-Requires:       gcc-gfortran 
 Requires:       gcc-c++
 Provides:       lib%{name}-static-devel  = %{version}-%{release}
 Provides:       %{name}-static-devel = %{version}-%{release}
@@ -200,15 +197,13 @@ OpenMPI support for Python 3.
 
 
 %build
-# gcc -flto cannot create executables (lld). clang C + gfortran LTO objects
-# are not link-compatible. rpm's %{build_ldflags} also injects C-only flags
-# (-Werror=format-security, -D_FORTIFY_SOURCE, ...) which make Open MPI's
-# AC_RUN_IFELSE Fortran check fail ("Could not run a simple Fortran program").
+# gcc -flto cannot create executables (lld). clang C + gfortran is not
+# link-compatible with LTO, and gfortran itself fails Open MPI's
+# AC_RUN_IFELSE check on the x86_64/aarch64 builders. C/C++ MPI is what
+# VTK/FreeCAD need; skip Fortran bindings until that toolchain works.
 nolto_cflags="$(echo %{optflags} | sed 's/-flto//g') -fno-lto"
 export CFLAGS="$nolto_cflags -fno-strict-aliasing"
 export CXXFLAGS="$nolto_cflags -fno-strict-aliasing"
-export FCFLAGS="-Os -g3 -fstack-protector-all -fno-lto"
-export FFLAGS="$FCFLAGS"
 export LDFLAGS="-Wl,-O2 -fno-lto"
 
 ./configure --prefix=%{_libdir}/%{name} \
@@ -219,6 +214,8 @@ export LDFLAGS="-Wl,-O2 -fno-lto"
 	--enable-builtin-atomics \
 	--enable-mpi-cxx \
 	--enable-mpi-java \
+	--disable-mpi-fortran \
+	--disable-oshmem-fortran \
 	--enable-static \
 	--enable-mpi1-compatibility \
 	--with-sge \
@@ -228,13 +225,12 @@ export LDFLAGS="-Wl,-O2 -fno-lto"
 	--with-libevent=external \
 	--with-pmix=external \
 	CC=%{opt_cc} CXX=%{opt_cxx} \
-	FC=gfortran F77=gfortran \
 	CFLAGS="$CFLAGS" \
 	CXXFLAGS="$CXXFLAGS" \
-	FCFLAGS="$FCFLAGS" \
-	FFLAGS="$FFLAGS" \
 	LDFLAGS="$LDFLAGS" \
-	|| { echo '===== config.log (tail) ====='; tail -n 80 config.log; exit 1; }
+	|| { echo '===== config.log (fortran/error) ====='; \
+	     grep -n -A20 -E 'Fortran compiler works|conftest.\[fF\]|error:|undefined reference|cannot open' config.log | tail -n 80; \
+	     exit 1; }
 
 %make_build
 
@@ -264,14 +260,6 @@ sed 's#@LIBDIR@#%{_libdir}/%{name}#;
 
 # make the rpm config file
 install -Dpm 644 %{SOURCE4} %{buildroot}/%{macrosdir}/macros.%{namearch}
-
-# Link the fortran module to proper location
-mkdir -p %{buildroot}%{_fmoddir}/%{name}
-for mod in %{buildroot}%{_libdir}/%{name}/lib/*.mod
-do
-  modname=$(basename $mod)
-  ln -s ../../../%{name}/lib/${modname} %{buildroot}/%{_fmoddir}/%{name}/
-done
 
 # Link the pkgconfig files into the main namespace as well
 mkdir -p %{buildroot}%{_libdir}/pkgconfig
@@ -330,9 +318,6 @@ install -pDm0644 %{SOURCE3} %{buildroot}/%{python3_sitearch}/openmpi.pth
 %files -n %{libname} 
 %{_libdir}/%{name}/lib/libmpi.so.%{major}{,.*}
 %{_libdir}/%{name}/lib/libmpi_cxx.so.%{cxx_major}{,.*}
-%{_libdir}/%{name}/lib/libmpi_usempif08.so.%{usempif08_major}{,.*}
-%{_libdir}/%{name}/lib/libmpi_usempi_ignore*.so.%{usempi_ignore_major}{,.*}
-%{_libdir}/%{name}/lib/libmpi_mpifh*.so.%{mpifh_major}{,.*}
 %{_libdir}/%{name}/lib/libompitrace*.so.%{ompitrace_major}{,.*}
 %{_libdir}/%{name}/lib/libopen-pal*.so.%{openpal_major}{,.*}
 %{_libdir}/%{name}/lib/libopen-rte*.so.%{openrte_major}{,.*}
@@ -354,9 +339,7 @@ install -pDm0644 %{SOURCE3} %{buildroot}/%{python3_sitearch}/openmpi.pth
 %{_libdir}/%{name}/bin/shmem[cCf]*
 %endif
 %{_includedir}/%{namearch}/*
-%{_fmoddir}/%{name}/
 %{_libdir}/%{name}/lib/*.so
-%{_libdir}/%{name}/lib/*.mod
 %{_libdir}/%{name}/lib/pkgconfig/
 %{_libdir}/pkgconfig/*.pc
 %{_mandir}/%{namearch}/man1/mpi[cCf]*
